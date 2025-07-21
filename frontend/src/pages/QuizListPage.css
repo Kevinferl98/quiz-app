@@ -51,14 +51,30 @@
 }
 
 .quiz-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 12px 16px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
-  margin-bottom: 12px;
-  transition: background-color 0.2s ease;
+  margin-bottom: 8px;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .quiz-item:hover {
   background-color: #f3f4f6;
+}
+
+.delete-button {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.delete-button:hover {
+  transform: scale(1.2);
 }
