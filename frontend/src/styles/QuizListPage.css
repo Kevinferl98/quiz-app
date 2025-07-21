@@ -78,3 +78,19 @@
 .delete-button:hover {
   transform: scale(1.2);
 }
+
+.create-quiz-button {
+  background-color: #2563eb;
+  color: white;
+  font-weight: 600;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.create-quiz-button:hover {
+  background-color: #1d4ed8;
+}

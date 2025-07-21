@@ -1,4 +1,4 @@
-import "./QuizListPage.css";
+import "../styles/QuizListPage.css";
 import {useNavigate} from "react-router-dom";
 import { Trash2 } from "lucide-react";
 
@@ -37,6 +37,7 @@ export default function QuizListPage() {
 
       <div className="page-content">
         <h2 className="page-title">Available Quizzes</h2>
+        <button onClick={() => navigate("/create")} className="create-quiz-button">Create Quiz</button>
         <ul className="quiz-list">
           {quizzes.map((quiz) => (
             <li 

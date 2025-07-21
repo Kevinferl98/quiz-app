@@ -3,6 +3,7 @@ import HomePage from "./pages/HomePage";
 import QuizListPage from "./pages/QuizListPage";
 import QuizPage from "./pages/QuizPage";
 import ResultPage from "./pages/ResultPage";
+import CreateQuiz from "./pages/CreateQuiz";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path="/quizzes" element={<QuizListPage />} />
         <Route path="/quiz/:id" element={<QuizPage />} />
         <Route path="/result" element={<ResultPage />} />
+        <Route path="/create" element={<CreateQuiz />} />
       </Routes>
     </Router>
   );
