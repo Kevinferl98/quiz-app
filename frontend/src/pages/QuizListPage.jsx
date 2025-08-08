@@ -10,6 +10,10 @@ export default function QuizListPage() {
     navigate("/");
   };
 
+  const handleGoToResults = () => {
+    navigate("/results");
+  }
+
   const quizzes = [
     { id: 1, title: "Lorem Ipsum" },
     { id: 2, title: "Lorem Ipsum" },
@@ -37,7 +41,11 @@ export default function QuizListPage() {
 
       <div className="page-content">
         <h2 className="page-title">Available Quizzes</h2>
-        <button onClick={() => navigate("/create")} className="create-quiz-button">Create Quiz</button>
+        <div className="page-header">
+          <button onClick={() => navigate("/create")} className="create-quiz-button">Create Quiz</button>
+          <button onClick={() => navigate("/results")} className="results-button">Results</button>
+        </div>
+
         <ul className="quiz-list">
           {quizzes.map((quiz) => (
             <li 

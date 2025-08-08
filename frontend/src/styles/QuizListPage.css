@@ -87,10 +87,31 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  margin-bottom: 16px;
   transition: background-color 0.2s ease;
 }
 
 .create-quiz-button:hover {
   background-color: #1d4ed8;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.results-button {
+  background-color: #10b981;
+  color: white;
+  font-weight: 600;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.results-button:hover {
+  background-color: #059669;
 }
