@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException
 import uuid
 from app.models import Quiz
 from app.models import AnswerSubmission
-from app.db.dynamodb_client import quiz_table
+from app.db.dynamodb_client import quiz_table, results_table
+from decimal import Decimal
 
 router = APIRouter(prefix="/quizzes", tags=["quizzes"])
 
@@ -64,5 +65,21 @@ def submit_quiz(quiz_id: str, answers: AnswerSubmission):
         qid = question.get("id")
         if answers.answers.get(qid) == question.get("correct_option"):
             correct += 1
+    
+    score_percent = correct / total * 100 if total > 0 else 0
+
+    result_item = {
+        "userId": "test-user",
+        "quizId": "quiz_id",
+        "quizTitle": quiz.get("title", ""),
+        "score_percent": Decimal(str(score_percent)),
+        "correct": correct,
+        "total": total
+    }
+
+    try:
+        results_table.put_item(Item=result_item)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB error: {str(e)}")
 
     return {"total": total, "correct": correct, "score_percent": correct / total * 100}

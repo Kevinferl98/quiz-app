@@ -15,3 +15,4 @@ else:
     dynamodb = boto3.resource("dynamodb", region_name="")
 
 quiz_table = dynamodb.Table("Quizzes")
+results_table = dynamodb.Table("Results")
