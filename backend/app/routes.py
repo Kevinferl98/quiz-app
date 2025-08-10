@@ -134,7 +134,7 @@ def submit_quiz(quiz_id: str, answers: AnswerSubmission, user=Depends(get_curren
 
     for question in quiz.get("questions", []):
         qid = question.get("id")
-        if answers.get(qid) == question.get("correct_answer"):
+        if answers.get(qid) == question.get("correct_option"):
             correct += 1
 
     return {"total": total, "correct": correct, "score_percent": correct / total * 100}
