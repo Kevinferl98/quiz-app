@@ -1,34 +1,91 @@
 import "../styles/QuizListPage.css";
 import {useNavigate} from "react-router-dom";
 import { Trash2 } from "lucide-react";
+import {useState, useEffect} from "react";
+
+const CACHE_KEY = "quizListCache";
+const CACHE_TTL = 10 * 1000;
+
+async function fetchQuizzesWithCache() {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+        const {data, timestamp} = JSON.parse(cached);
+        if (Date.now() - timestamp < CACHE_TTL) {
+            return data;
+        }
+    }
+
+    const response = await fetch("http://localhost:8080/quizzes");
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const json = await response.json();
+    const quizzes = (json.quizzes || []).map(({quizId, title}) => ({id: quizId, title}));
+
+    localStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({data: quizzes, timestamp: Date.now()})
+    );
+
+    return quizzes;
+}
 
 export default function QuizListPage() {
   const navigate = useNavigate();
+
+  const [quizzes, setQuizzes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function loadQuizzes() {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await fetchQuizzesWithCache();
+            setQuizzes(data);
+        } catch (err) {
+            setError(err.message || "Unknow error");
+        } finally {
+            setLoading(false);
+        }
+    }
+    loadQuizzes();
+  }, []);
 
   const handleLogout = () => {
     // TODO
     navigate("/");
   };
 
-  const handleGoToResults = () => {
-    navigate("/results");
-  }
+  const handleQuizClick = (id) => navigate(`/quiz/${id}`);
 
-  const quizzes = [
-    { id: 1, title: "Lorem Ipsum" },
-    { id: 2, title: "Lorem Ipsum" },
-    { id: 3, title: "Lorem Ipsum" },
-  ];
-
-  const handleQuizClick = (id) => {
-    navigate(`/quiz/${id}`);
+  const handleDelete = async (id, e) => {
+    e.stopPropagation();
+    setError(null);
+    try {
+      const response = await fetch(`http://localhost:8080/quizzes/${id}`, {
+        method: "DELETE"
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const updated = quizzes.filter((quiz) => quiz.id !== id);
+      setQuizzes(updated);
+      localStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({
+          data: updated,
+          timestamp: Date.now()
+        })
+      );
+    } catch (error) {
+      setError("Failed to delete quiz");
+    }
   };
 
-  const handleDelete = (id, e) => {
-    // TODO
-    e.stopPropagation();
-    console.log("Deleted quiz: {}", id)
-  }
+  if (loading) return <p>Loading quizzes...</p>
+  if (error) return <p>Error loading quizzes: {error}</p>
 
   return (
     <div>

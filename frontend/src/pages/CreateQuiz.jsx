@@ -8,35 +8,80 @@ export default function CreateQuiz() {
   const [questions, setQuestions] = useState([]);
 
   const handleAddQuestion = () => {
-    setQuestions([
-      ...questions,
+    setQuestions(prev => [
+      ...prev,
       { text: "", options: ["", "", "", ""], correctIndex: 0 },
     ]);
   };
 
   const handleQuestionChange = (index, field, value) => {
-    const updated = [...questions];
-    updated[index][field] = value;
-    setQuestions(updated);
+    setQuestions(prev => {
+        const updated = [...prev];
+        updated[index].text = value;
+        return updated;
+    });
   };
 
   const handleOptionChange = (qIndex, optIndex, value) => {
-    const updated = [...questions];
-    updated[qIndex].options[optIndex] = value;
-    setQuestions(updated);
+    setQuestions(prev => {
+        const updated = [...prev];
+        updated[qIndex].options[optIndex] = value;
+        return updated;
+    });
   };
 
   const handleCorrectChange = (qIndex, idx) => {
-    const updated = [...questions];
-    updated[qIndex].correctIndex = idx;
-    setQuestions(updated);
+    setQuestions(prev => {
+        const updated = [...prev];
+        updated[qIndex].correctIndex = idx;
+        return updated;
+    })
   };
 
-  const handleSubmit = () => {
-    const quizData = { title, questions };
-    console.log("Quiz to submit:", quizData);
-    // TODO
-    navigate("/quizzes");
+  const isValidQuiz = () => {
+    if (!title.trim()) return false;
+    if (questions.length === 0) return false;
+    for (const q of questions) {
+        if (!q.text.trim()) return false;
+        if (q.options.some(opt => !opt.trim())) return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!isValidQuiz()) {
+        alert("Please fill in the quiz title and all question fields.");
+        return;
+    }
+
+    const formattedQuestions = questions.map((q, i) => ({
+      id: `q${i + 1}`,
+      question_text: q.text,
+      options: q.options,
+      correct_option: q.options[q.correctIndex]
+    }));
+
+    try {
+      const res = await fetch("http://localhost:8080/quizzes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({title, questions: formattedQuestions})
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.detail || "Error creating quiz");
+      }
+
+      const data = await res.json();
+      console.log("Quiz created with ID: ", data.quizId);
+      navigate("/quizzes");
+    } catch (error) {
+      console.error("Error: ", error);
+      alert("Error creating quiz: " + error.message);
+    }
   };
 
   return (
@@ -60,7 +105,7 @@ export default function CreateQuiz() {
       ))}
 
       <div className="action-buttons">
-        <button onClick={handleSubmit} className="submit-button">Create</button>
+        <button onClick={handleSubmit} className="submit-button" disabled={!isValidQuiz()} title={!isValidQuiz() ? "Fill all fields before submitting" : "Create quiz"}>Create</button>
         <button onClick={() => navigate("/quizzes")} className="cancel-button">Cancel</button>
       </div>
     </div>

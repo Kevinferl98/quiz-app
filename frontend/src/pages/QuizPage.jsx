@@ -1,74 +1,105 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../styles/QuizPage.css";
-
-const quizzesData = {
-  1: {
-    title: "Lorem Ipsum Quiz",
-    questions: [
-      {
-        id: 1,
-        text: "Lorem Ipsum",
-        options: [
-          "Lorem Ipsum",
-          "Lorem Ipsum",
-          "Lorem Ipsum",
-          "Lorem Ipsum",
-        ],
-      }
-    ],
-  },
-};
 
 export default function QuizPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const quiz = quizzesData[id];
+
+  const [quiz, setQuiz] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [answers, setAnswers] = useState({});
 
-  const handleBack = () => {
-    navigate("/quizzes");
+  useEffect(() => {
+    async function fetchQuiz() {
+        setLoading(true);
+        setError(null);
+        try{
+            const res = await fetch(`http://localhost:8080/quizzes/${id}`);
+            if (!res.ok) throw new Error(`Quiz not found (status ${res.status})`);
+            const data = await res.json();
+            setQuiz(data);
+        } catch (err) {
+            setError(err.message || "Failed to load quiz");
+        } finally {
+            setLoading(false);
+        }
+    }
+    fetchQuiz();
+  }, [id]);
+
+  const handleBack = () => navigate("/quizzes");
+
+  const handleOptionSelect = (questionId, option) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: option }));
   };
 
-  if (!quiz) {
+  const handleSubmit = async () => {
+    if (Object.keys(answers).length != quiz.questions.length) {
+        alert("Please answer all questions before submitting.");
+        return;
+    }
+
+    try {
+        const res = await fetch(`http://localhost:8080/quizzes/${id}/submit`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({answers})
+        });
+        if (!res.ok) throw new Error(`Submit failed with status ${res.status}`);
+        const result = await res.json();
+        alert(`Results: ${JSON.stringify(result)}`);
+        navigate("/quizzes");
+    } catch (err) {
+        console.error("Error submitting answers:", err);
+        alert("Error submitting quiz: " + (err.message || "Unknown error"));
+    }
+  };
+
+  const renderHeader = (title) => {
     return (
-      <div className="quiz-container">
-        <header className="quiz-topbar">
-          <button className="back-button" onClick={handleBack}>← Back</button>
-          <h1 className="quiz-title">Quiz Not Found</h1>
-          <div style={{ width: 75 }} />
-        </header>
+      <header className="quiz-topbar">
+        <button className="back-button" onClick={handleBack}>← Back</button>
+        <h1 className="quiz-title">{title}</h1>
+        <div style={{width: 75}}></div>
+      </header>
+    )
+  };
+
+  if (loading) return (
+    <div className="quiz-container">
+        {renderHeader("Loading quiz...")}
         <main className="questions-container"></main>
-      </div>
-    );
-  }
+    </div>
+  );
 
-  const handleOptionSelect = (questionId, optionIndex) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: optionIndex }));
-  };
+  if (error) return (
+    <div className="quiz-container">
+        {renderHeader(`Error: ${error}`)}
+        <main className="questions-container"></main>
+    </div>
+  )
 
-  const handleSubmit = () => {
-    // TODO
-    alert("Submitted answers: " + JSON.stringify(answers));
-    navigate("/quizzes")
-  };
+  if (!quiz) return (
+    <div className="quiz-container">
+        {renderHeader("Quiz Not Found")}
+        <main className="questions-container"></main>
+    </div>
+  )
 
   return (
     <div className="quiz-container">
-      <header className="quiz-topbar">
-        <button className="back-button" onClick={handleBack}>← Back</button>
-        <h1 className="quiz-title">{quiz.title}</h1>
-        <div style={{ width: 75 }} /> {}
-      </header>
+        {renderHeader(quiz.title)}
 
       <main className="questions-container">
         {quiz.questions.map((q) => (
           <div key={q.id} className="question-block">
-            <p className="question-text">{q.text}</p>
+            <p className="question-text">{q.question_text}</p>
             <div className="options-container">
               {q.options.map((option, idx) => (
                 <label key={idx} className="option-label">
-                  <input type="radio" name={`question-${q.id}`} checked={answers[q.id] === idx} onChange={() => handleOptionSelect(q.id, idx)}/>
+                  <input type="radio" name={`question-${q.id}`} checked={answers[q.id] === option} onChange={() => handleOptionSelect(q.id, option)}/>
                   <span className="custom-radio" />
                   {option}
                 </label>
