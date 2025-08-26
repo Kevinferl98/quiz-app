@@ -2,7 +2,7 @@ import {fetchAuthSession } from 'aws-amplify/auth';
 
 export async function apiFetch(url, options = {}) {
     const session = await fetchAuthSession();
-    const token = session.tokens.accessToken;
+    const token = session.tokens?.idToken?.toString();
 
     const mergedOptions = {
         ...options,
