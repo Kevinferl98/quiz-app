@@ -4,7 +4,7 @@ const awsconfig = {
         region: "",
         userPoolId: "",
         userPoolClientId: "",
-        authenticationFlowType: "USER_PASSWORD_AUTH"
+        authenticationFlowType: ""
       }
     },
 }
