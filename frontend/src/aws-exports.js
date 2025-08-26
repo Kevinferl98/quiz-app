@@ -3,8 +3,7 @@ const awsconfig = {
       Cognito: {
         region: "",
         userPoolId: "",
-        userPoolClientId: "",
-        authenticationFlowType: ""
+        userPoolClientId: ""
       }
     },
 }
