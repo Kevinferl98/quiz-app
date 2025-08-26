@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../styles/QuizPage.css";
+import {apiFetch} from "../api/api";
 
 export default function QuizPage() {
   const { id } = useParams();
@@ -16,9 +17,7 @@ export default function QuizPage() {
         setLoading(true);
         setError(null);
         try{
-            const res = await fetch(`http://localhost:8080/quizzes/${id}`);
-            if (!res.ok) throw new Error(`Quiz not found (status ${res.status})`);
-            const data = await res.json();
+            const data = await apiFetch(`http://localhost:8080/quizzes/${id}`);
             setQuiz(data);
         } catch (err) {
             setError(err.message || "Failed to load quiz");
@@ -42,13 +41,11 @@ export default function QuizPage() {
     }
 
     try {
-        const res = await fetch(`http://localhost:8080/quizzes/${id}/submit`, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({answers})
+        const result = await apiFetch(`http://localhost:8080/quizzes/${id}/submit`, {
+          method: "POST",
+          body: JSON.stringify({answers})
         });
-        if (!res.ok) throw new Error(`Submit failed with status ${res.status}`);
-        const result = await res.json();
+        
         alert(`Results: ${JSON.stringify(result)}`);
         navigate("/quizzes");
     } catch (err) {

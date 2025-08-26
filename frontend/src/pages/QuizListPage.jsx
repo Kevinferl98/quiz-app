@@ -2,6 +2,8 @@ import "../styles/QuizListPage.css";
 import {useNavigate} from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import {useState, useEffect} from "react";
+import {apiFetch} from "../api/api";
+import { signOut } from 'aws-amplify/auth';
 
 const CACHE_KEY = "quizListCache";
 const CACHE_TTL = 10 * 1000;
@@ -15,11 +17,7 @@ async function fetchQuizzesWithCache() {
         }
     }
 
-    const response = await fetch("http://localhost:8080/quizzes");
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const json = await response.json();
+    const json = await apiFetch("http://localhost:8080/quizzes");
     const quizzes = (json.quizzes || []).map(({quizId, title}) => ({id: quizId, title}));
 
     localStorage.setItem(
@@ -53,8 +51,8 @@ export default function QuizListPage() {
     loadQuizzes();
   }, []);
 
-  const handleLogout = () => {
-    // TODO
+  const handleLogout = async () => {
+    await signOut();
     navigate("/");
   };
 
@@ -64,12 +62,7 @@ export default function QuizListPage() {
     e.stopPropagation();
     setError(null);
     try {
-      const response = await fetch(`http://localhost:8080/quizzes/${id}`, {
-        method: "DELETE"
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      await apiFetch(`http://localhost:8080/quizzes/${id}`, {method: "DELETE"});
       const updated = quizzes.filter((quiz) => quiz.id !== id);
       setQuizzes(updated);
       localStorage.setItem(
