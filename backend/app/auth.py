@@ -12,8 +12,11 @@ AWS_REGION = os.getenv("AWS_REGION")
 
 jwks_client = PyJWKClient(f"https://cognito-idp.{AWS_REGION}.amazonaws.com/{COGNITO_POOL_ID}/.well-known/jwks.json")
 
-def get_current_user(Authorization: str = Header(...)):
-    token = Authorization.replace("Bearer ", "")
+def get_current_user(authorization: str = Header(...)):
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Bearer token missing")
+
+    token = authorization.replace("Bearer ", "")
 
     try:
         signing_key = jwks_client.get_signing_key_from_jwt(token)
@@ -22,7 +25,7 @@ def get_current_user(Authorization: str = Header(...)):
             signing_key.key,
             issuer=f"https://cognito-idp.{AWS_REGION}.amazonaws.com/{COGNITO_POOL_ID}",
             algorithms=["RS256"],
-            audience=APP_CLIENT_ID,
+            audience=COGNITO_POOL_ID,
             options={
                 "verify_exp": True,
                 "verify_iss": True
