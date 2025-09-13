@@ -3,7 +3,7 @@ import {useNavigate} from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import {useState, useEffect} from "react";
 import {apiFetch} from "../api/api";
-import { signOut } from 'aws-amplify/auth';
+import { useAuthenticator } from "@aws-amplify/ui-react";
 
 const CACHE_KEY = "quizListCache";
 const CACHE_TTL = 10 * 1000;
@@ -30,6 +30,7 @@ async function fetchQuizzesWithCache() {
 
 export default function QuizListPage() {
   const navigate = useNavigate();
+  const { signOut } = useAuthenticator();
 
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);

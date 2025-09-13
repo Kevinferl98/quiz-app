@@ -4,19 +4,47 @@ import QuizListPage from "./pages/QuizListPage";
 import QuizPage from "./pages/QuizPage";
 import ResultPage from "./pages/ResultPage";
 import CreateQuiz from "./pages/CreateQuiz";
+import { Authenticator } from "@aws-amplify/ui-react";
 
-function App() {
+export default function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/quizzes" element={<QuizListPage />} />
-        <Route path="/quiz/:id" element={<QuizPage />} />
-        <Route path="/results" element={<ResultPage />} />
-        <Route path="/create" element={<CreateQuiz />} />
+
+        <Route
+          path="/quizzes"
+          element={
+            <Authenticator hideSignUp components={{ SignIn: { Footer: () => null } }}>
+              <QuizListPage />
+            </Authenticator>
+          }
+        />
+        <Route
+          path="/quiz/:id"
+          element={
+            <Authenticator hideSignUp components={{ SignIn: { Footer: () => null } }}>
+              <QuizPage />
+            </Authenticator>
+          }
+        />
+        <Route
+          path="/results"
+          element={
+            <Authenticator hideSignUp components={{ SignIn: { Footer: () => null } }}>
+              <ResultPage />
+            </Authenticator>
+          }
+        />
+        <Route
+          path="/create"
+          element={
+            <Authenticator hideSignUp components={{ SignIn: { Footer: () => null } }}>
+              <CreateQuiz />
+            </Authenticator>
+          }
+        />
       </Routes>
     </Router>
   );
 }
-
-export default App;

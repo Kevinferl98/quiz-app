@@ -1,14 +1,13 @@
 from fastapi import Header, HTTPException
-import os
 import jwt
 from jwt import PyJWKClient
 from dotenv import load_dotenv
 
 load_dotenv()
 
-COGNITO_POOL_ID = os.getenv("COGNITO_POOL_ID")
-APP_CLIENT_ID = os.getenv("APP_CLIENT_ID")
-AWS_REGION = os.getenv("AWS_REGION")
+COGNITO_POOL_ID = ""
+APP_CLIENT_ID = ""
+AWS_REGION = ""
 
 jwks_client = PyJWKClient(f"https://cognito-idp.{AWS_REGION}.amazonaws.com/{COGNITO_POOL_ID}/.well-known/jwks.json")
 
