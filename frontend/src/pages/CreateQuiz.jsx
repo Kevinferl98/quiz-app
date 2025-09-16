@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/CreateQuiz.css";
+import {apiFetch} from "../api/api";
 
 export default function CreateQuiz() {
   const navigate = useNavigate();
@@ -62,20 +63,11 @@ export default function CreateQuiz() {
     }));
 
     try {
-      const res = await fetch("http://localhost:8080/quizzes", {
+      const data = await apiFetch("http://localhost:8080/quizzes", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({title, questions: formattedQuestions})
       });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.detail || "Error creating quiz");
-      }
-
-      const data = await res.json();
+      
       console.log("Quiz created with ID: ", data.quizId);
       navigate("/quizzes");
     } catch (error) {

@@ -12,7 +12,7 @@ router = APIRouter(prefix="/quizzes", tags=["quizzes"])
 @router.get("/")
 def list_quizzes(user=Depends(get_current_user)):
     try:
-        response = quiz_table.scan(ProjectExpression="quizId, title")
+        response = quiz_table.scan(ProjectionExpression="quizId, title")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"DB error: {str(e)}")
     
