@@ -8,7 +8,6 @@ A user-friendly web application that allows users to take quizzes, track their s
 
 ## Architecture Diagram
 
-![Architecture Diagram]()
 
 ## Architecture Overview
 
