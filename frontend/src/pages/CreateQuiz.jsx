@@ -63,7 +63,7 @@ export default function CreateQuiz() {
     }));
 
     try {
-      const data = await apiFetch("http://localhost:8080/quizzes", {
+      const data = await apiFetch("/quizzes", {
         method: "POST",
         body: JSON.stringify({title, questions: formattedQuestions})
       });

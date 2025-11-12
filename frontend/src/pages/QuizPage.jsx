@@ -17,7 +17,7 @@ export default function QuizPage() {
         setLoading(true);
         setError(null);
         try{
-            const data = await apiFetch(`http://localhost:8080/quizzes/${id}`);
+            const data = await apiFetch(`/quizzes/${id}`);
             setQuiz(data);
         } catch (err) {
             setError(err.message || "Failed to load quiz");
@@ -41,10 +41,10 @@ export default function QuizPage() {
     }
 
     try {
-        const result = await apiFetch(`http://localhost:8080/quizzes/${id}/submit`, {
+        const result = await apiFetch("/saveResult", {
           method: "POST",
-          body: JSON.stringify({answers})
-        });
+          body: JSON.stringify({ quizId: quiz.id, answers })
+        }, true);
         
         alert(`Results: ${JSON.stringify(result)}`);
         navigate("/quizzes");

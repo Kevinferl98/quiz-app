@@ -1,18 +1,35 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../styles/ResultPage.css";
+import { apiFetch } from "../api/api";
 
 export default function ResultPage() {
   const navigate = useNavigate();
 
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   useEffect(() => {
-    setResults([
-      {id: 1, title: "Lorem Ipsum", score: "2/3"},
-      {id: 2, title: "Lorem Ipsum", score: "3/5"},
-      {id: 3, title: "Lorem Ipsum", score: "5/5"}
-    ]);
+    async function loadResults() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await apiFetch('/getResults', {}, true);
+        const formatted = data.map((item, idx) => ({
+          id: idx,
+          title: item.quizTitle,
+          score: item.score_percentage
+        }));
+        setResults(formatted);
+      } catch (err) {
+        console.error('Error fetching results:', err);
+        setError(err.message || 'Failed to load results');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadResults();
   }, []);
 
   const handleBack = () => {
@@ -28,17 +45,22 @@ export default function ResultPage() {
       </header>
 
       <main className="results-list">
-        {results.length === 0 ? (
-          <p className="no-results">No results found.</p>) : (
-            <ul>
-              {results.map((result) => (
-                <li key={result.id} className="result-item">
-                  <span className="result-title">{result.title}</span>
-                  <span className="result-score">{result.score}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+        {loading ? (
+          <p>Loading results...</p>
+        ) : error ? (
+          <p className="no-results">Error: {error}</p>
+        ) : results.length == 0 ? (
+          <p className="no-results">No results found</p>
+        ) : (
+          <ul>
+            {results.map((result) => (
+              <li key={result.id} className="result-item">
+                <span className="result-title">{result.title}</span>
+                <span className="result-score">{result.score}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </main>
     </div>
   );

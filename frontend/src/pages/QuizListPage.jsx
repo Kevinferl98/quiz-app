@@ -17,7 +17,7 @@ async function fetchQuizzesWithCache() {
         }
     }
 
-    const json = await apiFetch("http://localhost:8080/quizzes");
+    const json = await apiFetch("/quizzes");
     const quizzes = (json.quizzes || []).map(({quizId, title}) => ({id: quizId, title}));
 
     localStorage.setItem(
@@ -63,7 +63,7 @@ export default function QuizListPage() {
     e.stopPropagation();
     setError(null);
     try {
-      await apiFetch(`http://localhost:8080/quizzes/${id}`, {method: "DELETE"});
+      await apiFetch(`/quizzes/${id}`, {method: "DELETE"});
       const updated = quizzes.filter((quiz) => quiz.id !== id);
       setQuizzes(updated);
       localStorage.setItem(

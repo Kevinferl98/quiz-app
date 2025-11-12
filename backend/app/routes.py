@@ -1,16 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 import uuid
 from app.models import Quiz
-from app.models import Question
-from app.models import AnswerSubmission
-from app.db.dynamodb_client import quiz_table, results_table
-from app.auth import get_current_user
-from decimal import Decimal
+from app.db.dynamodb_client import quiz_table
+from app.auth import get_current_user, is_admin
 
 router = APIRouter(prefix="/quizzes", tags=["quizzes"])
 
 @router.get("/")
-def list_quizzes(user=Depends(get_current_user)):
+def list_quizzes():
     try:
         response = quiz_table.scan(ProjectionExpression="quizId, title")
     except Exception as e:
@@ -20,7 +17,7 @@ def list_quizzes(user=Depends(get_current_user)):
     return {"quizzes": quizzes}
 
 @router.get("/{quiz_id}")
-def get_quiz(quiz_id: str, user=Depends(get_current_user)):
+def get_quiz(quiz_id: str):
     try:
         response = quiz_table.get_item(Key={"quizId": quiz_id})
     except Exception as e:
@@ -33,7 +30,7 @@ def get_quiz(quiz_id: str, user=Depends(get_current_user)):
 
 @router.post("/")
 def create_quiz(quiz: Quiz, user=Depends(get_current_user)):
-    if "admin" not in user.get("cognito:groups", []):
+    if not is_admin(user):
         raise HTTPException(status_code=403, detail="Only admins can create quizzes")
     
     quiz_id = str(uuid.uuid4())
@@ -49,7 +46,7 @@ def create_quiz(quiz: Quiz, user=Depends(get_current_user)):
 
 @router.delete("/{quiz_id}")
 def delete_quiz(quiz_id: str, user=Depends(get_current_user)):
-    if "admin" not in user.get("cognito:groups", []):
+    if not is_admin(user):
         raise HTTPException(status_code=403, detail="Only admins can delete quizzes")
 
     try:
@@ -58,35 +55,3 @@ def delete_quiz(quiz_id: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=f"DB error: {str(e)}")
 
     return {"success": True}
-
-@router.post("/{quiz_id}/submit")
-def submit_quiz(quiz_id: str, answers: AnswerSubmission, user=Depends(get_current_user)):
-    response = quiz_table.get_item(Key={"quizId": quiz_id})
-    if "Item" not in response:
-        raise HTTPException(status_code=404, detail="Quiz not found")
-
-    quiz = response["Item"]
-    correct = 0
-    total = len(quiz.get("questions", []))
-
-    for question in quiz.get("questions", []):
-        qid = question.get("id")
-        if answers.get(qid) == question.get("correct_option"):
-            correct += 1
-    score_percent = correct / total * 100 if total > 0 else 0
-
-    result_item = {
-        "userId": user["sub"],
-        "quizId": quiz_id,
-        "quizTitle": quiz.get("title", ""),
-        "score_percent":  Decimal(str(score_percent)),
-        "correct": correct,
-        "total": total
-    }
-
-    try:
-        results_table.put_item(Item=result_item)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"DB error: {str(e)}")
-
-    return {"total": total, "correct": correct, "score_percent": score_percent}
