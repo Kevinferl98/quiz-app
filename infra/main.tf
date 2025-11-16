@@ -32,3 +32,35 @@ resource "aws_cognito_user_pool_client" "my_app_client" {
       "ALLOW_USER_SRP_AUTH"
     ]
 }
+
+resource "aws_dynamodb_table" "Quizzes" {
+  name = "Quizzes"
+  billing_mode = "PROVISIONED"
+  read_capacity = 5
+  write_capacity = 5
+  hash_key = "quizId"
+
+  attribute {
+    name = "quizId"
+    type = "S"
+  }
+}
+
+resource "aws_dynamodb_table" "Results" {
+  name = "Results"
+  billing_mode = "PROVISIONED"
+  read_capacity = 5
+  write_capacity = 5
+  hash_key = "userId"
+  range_key = "quizId"
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
+  attribute {
+    name = "quizId"
+    type = "S"
+  }
+}
