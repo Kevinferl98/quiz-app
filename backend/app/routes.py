@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 import uuid
 from app.models import Quiz
-from app.models import Question
 from app.models import AnswerSubmission
 from app.db.dynamodb_client import quiz_table, results_table
 from app.auth import get_current_user
@@ -9,15 +8,43 @@ from decimal import Decimal
 
 router = APIRouter(prefix="/quizzes", tags=["quizzes"])
 
-@router.get("/")
+'''@router.get("/")
 def list_quizzes(user=Depends(get_current_user)):
     try:
         response = quiz_table.scan(ProjectionExpression="quizId, title")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"DB error: {str(e)}")
     
-    quizzes = response.get("Items", [])
-    return {"quizzes": quizzes}
+    quizzes = [q for q in response.get("Items", []) if q.get("is_public", True) or q.get("owner_id") == user["sub"]]
+    return {"quizzes": quizzes}'''
+
+@router.get("/public")
+def list_public_quizzes():
+    try:
+        response = quiz_table.scan(
+            FilterExpression="is_public = :val",
+            ExpressionAttributeValues={":val": True},
+            ProjectionExpression="quizId, title"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB error: {str(e)}")
+    
+    return {"quizzes": response.get("Items", [])}
+
+@router.get("/mine")
+def list_my_quizzes(user=Depends(get_current_user)):
+    if not user:
+        raise HTTPException(status_code=403, detail="Login required")
+    
+    try:
+        response = quiz_table.scan(
+            FilterExpression="owner_id = :owner_id",
+            ExpressionAttributeValues={":owner_id": user["sub"]}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB error: {str(e)}")
+    
+    return {"quizzes": response.get("Items", [])}
 
 @router.get("/{quiz_id}")
 def get_quiz(quiz_id: str, user=Depends(get_current_user)):
@@ -32,13 +59,11 @@ def get_quiz(quiz_id: str, user=Depends(get_current_user)):
     return response["Item"]
 
 @router.post("/")
-def create_quiz(quiz: Quiz, user=Depends(get_current_user)):
-    if "admin" not in user.get("cognito:groups", []):
-        raise HTTPException(status_code=403, detail="Only admins can create quizzes")
-    
+def create_quiz(quiz: Quiz, user=Depends(get_current_user)):    
     quiz_id = str(uuid.uuid4())
     item = quiz.model_dump()
     item["quizId"] = quiz_id
+    item["owner_id"] = user["sub"]
 
     try:
         quiz_table.put_item(Item = item)
@@ -49,8 +74,12 @@ def create_quiz(quiz: Quiz, user=Depends(get_current_user)):
 
 @router.delete("/{quiz_id}")
 def delete_quiz(quiz_id: str, user=Depends(get_current_user)):
-    if "admin" not in user.get("cognito:groups", []):
-        raise HTTPException(status_code=403, detail="Only admins can delete quizzes")
+    response = quiz_table.get_item(Key={"quizId": quiz_id})
+    if "Item" not in response:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+
+    if response["Item"]["owner_id"] != user["sub"]:
+        raise HTTPException(status_code=403, detail="You can only delete your own quizzes")
 
     try:
         quiz_table.delete_item(Key={"quizId": quiz_id})
