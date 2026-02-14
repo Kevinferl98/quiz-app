@@ -1,0 +1,30 @@
+services:
+  dynamodb:
+    image: amazon/dynamodb-local
+    container_name: dynamodb_local
+    ports:
+      - "8000:8000"
+    volumes:
+      - dynamodb_data:/home/dynamodblocal/data
+    networks:
+      - backend_net
+
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - "8001:8000"
+    environment:
+      IS_LOCAL: "true"
+      USE_LOCAL_AUTH: "true"
+    depends_on:
+      - dynamodb
+    networks:
+      - backend_net
+    
+networks:
+  backend_net:
+    driver: bridge
+
+volumes:
+  dynamodb_data:

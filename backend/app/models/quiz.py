@@ -8,9 +8,12 @@ class Question(BaseModel):
     correct_option: str
 
 class Quiz(BaseModel):
+    quizId: Optional[str] = None
+    owner_id: Optional[str] = None
     title: str
     description: Optional[str] = None
     questions: List[Question]
+    is_public: bool = True
 
 class AnswerSubmission(BaseModel):
     answers: Dict[str, str]

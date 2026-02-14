@@ -1,35 +1,18 @@
-from fastapi import Header, HTTPException
-import jwt
-from jwt import PyJWKClient
-from dotenv import load_dotenv
+from fastapi import Header
+import os
 
-load_dotenv()
+USE_LOCAL_AUTH = os.getenv("USE_LOCAL_AUTH", "true").lower() == "true"
 
-COGNITO_POOL_ID = ""
-APP_CLIENT_ID = ""
-AWS_REGION = ""
+def get_current_user_mock(x_user_id: str = Header(None, description="User ID")):
+    if not x_user_id:
+        return None
+    return {"sub": x_user_id}
 
-jwks_client = PyJWKClient(f"https://cognito-idp.{AWS_REGION}.amazonaws.com/{COGNITO_POOL_ID}/.well-known/jwks.json")
+def get_current_user_alb(x_auth_user: str = Header(None, description="User ID")):
+    if not x_auth_user:
+        return None
+    return {"sub": x_auth_user}
 
-def get_current_user(authorization: str = Header(...)):
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Bearer token missing")
+_current_user_func = get_current_user_mock if USE_LOCAL_AUTH else get_current_user_alb
 
-    token = authorization.replace("Bearer ", "")
-
-    try:
-        signing_key = jwks_client.get_signing_key_from_jwt(token)
-        payload = jwt.decode(
-            token,
-            signing_key.key,
-            issuer=f"https://cognito-idp.{AWS_REGION}.amazonaws.com/{COGNITO_POOL_ID}",
-            algorithms=["RS256"],
-            audience=COGNITO_POOL_ID,
-            options={
-                "verify_exp": True,
-                "verify_iss": True
-            }
-        )
-        return payload
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
+get_user_dep = _current_user_func

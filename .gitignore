@@ -1,3 +1,11 @@
+# IDE
+.idea/
 .env
-/backend/app/__pycache__
-/backend/app/db/__pycache__
+
+# Python
+__pycache__/
+*.py[cod]
+.coverage
+
+# Test artifacts
+.pytest_cache
