@@ -5,21 +5,21 @@ from decimal import Decimal
 
 client = TestClient(app)
 
-@patch("app.routes.quiz_table.scan")
+@patch("app.services.quiz_service.quiz_table.scan")
 def test_list_public_quizzes(mock_scan):
     mock_scan.return_value = {"Items": [{"quizId": "1", "title": "Quiz 1"}]}
     response = client.get("/quizzes/public")
     assert response.status_code == 200
     assert response.json() == {"quizzes": [{"quizId": "1", "title": "Quiz 1"}]}
 
-@patch("app.routes.quiz_table.scan")
+@patch("app.services.quiz_service.quiz_table.scan")
 def test_list_my_quizzes(mock_scan):
     mock_scan.return_value = {"Items": [{"quizId": "2", "title": "My Quiz"}]}
     response = client.get("/quizzes/mine")
     assert response.status_code == 200
     assert response.json() == {"quizzes": [{"quizId": "2", "title": "My Quiz"}]}
 
-@patch("app.routes.quiz_table.get_item")
+@patch("app.services.quiz_service.quiz_table.get_item")
 def test_get_quiz_success(mock_get_item):
     mock_get_item.return_value = {
         "Item": {"quizId": "abc-123", "title": "Test Quiz", "owner_id": "user_123"}
@@ -28,7 +28,7 @@ def test_get_quiz_success(mock_get_item):
     assert response.status_code == 200
     assert response.json()["quizId"] == "abc-123"
 
-@patch("app.routes.quiz_table.get_item")
+@patch("app.services.quiz_service.quiz_table.get_item")
 def test_get_quiz_not_found(mock_get_item):
     mock_get_item.return_value = {}
     
@@ -36,7 +36,7 @@ def test_get_quiz_not_found(mock_get_item):
     assert response.status_code == 404
     assert response.json()["detail"] == "Quiz not found"
 
-@patch("app.routes.quiz_table.put_item")
+@patch("app.services.quiz_service.quiz_table.put_item")
 def test_create_quiz(mock_put_item):
     quiz_data = {
         "title": "New Quiz",
@@ -47,8 +47,8 @@ def test_create_quiz(mock_put_item):
     called_item = mock_put_item.call_args[1]["Item"]
     assert called_item["owner_id"] == "user_123"
 
-@patch("app.routes.quiz_table.delete_item")
-@patch("app.routes.quiz_table.get_item")
+@patch("app.services.quiz_service.quiz_table.delete_item")
+@patch("app.services.quiz_service.quiz_table.get_item")
 def test_delete_quiz_success(mock_get_item, mock_delete_item):
     mock_get_item.return_value = {
         "Item": {"quizId": "abc-123", "owner_id": "user_123"}
@@ -57,7 +57,7 @@ def test_delete_quiz_success(mock_get_item, mock_delete_item):
     assert response.status_code == 200
     mock_delete_item.assert_called_once()
 
-@patch("app.routes.quiz_table.get_item")
+@patch("app.services.quiz_service.quiz_table.get_item")
 def test_delete_quiz_forbidden(mock_get_item):
     mock_get_item.return_value = {
         "Item": {"quizId": "abc-123", "owner_id": "someone_else"}
@@ -65,8 +65,8 @@ def test_delete_quiz_forbidden(mock_get_item):
     response = client.delete("/quizzes/abc-123")
     assert response.status_code == 403
 
-@patch("app.routes.results_table.put_item")
-@patch("app.routes.quiz_table.get_item")
+@patch("app.services.quiz_service.results_table.put_item")
+@patch("app.services.quiz_service.quiz_table.get_item")
 def test_submit_quiz_success(mock_get_quiz, mock_put_result):
     mock_get_quiz.return_value = {
         "Item": {
@@ -99,7 +99,7 @@ def test_submit_quiz_success(mock_get_quiz, mock_put_result):
     assert called_result["score_percent"] == Decimal("50.0")
     assert called_result["quizTitle"] == "Math Quiz"
 
-@patch("app.routes.quiz_table.get_item")
+@patch("app.services.quiz_service.quiz_table.get_item")
 def test_submit_quiz_not_found(mock_get_quiz):
     mock_get_quiz.return_value = {}
     
