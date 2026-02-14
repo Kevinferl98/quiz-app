@@ -13,7 +13,6 @@ def get_current_user_alb(x_auth_user: str = Header(None, description="User ID"))
         return None
     return {"sub": x_auth_user}
 
-def get_current_user():
-    if USE_LOCAL_AUTH:
-        return get_current_user_mock
-    return get_current_user_alb
+_current_user_func = get_current_user_mock if USE_LOCAL_AUTH else get_current_user_alb
+
+get_user_dep = _current_user_func

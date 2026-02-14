@@ -3,7 +3,7 @@ import uuid
 from app.models import Quiz
 from app.models import AnswerSubmission
 from app.db.dynamodb_client import quiz_table, results_table
-from app.auth import get_current_user
+from app.auth import get_user_dep
 from decimal import Decimal
 
 router = APIRouter(prefix="/quizzes", tags=["quizzes"])
@@ -22,7 +22,7 @@ def list_public_quizzes():
     return {"quizzes": response.get("Items", [])}
 
 @router.get("/mine")
-def list_my_quizzes(user=Depends(get_current_user())):
+def list_my_quizzes(user=Depends(get_user_dep)):
     if not user:
         raise HTTPException(status_code=403, detail="Login required")
     
@@ -37,7 +37,7 @@ def list_my_quizzes(user=Depends(get_current_user())):
     return {"quizzes": response.get("Items", [])}
 
 @router.get("/{quiz_id}")
-def get_quiz(quiz_id: str, user=Depends(get_current_user())):
+def get_quiz(quiz_id: str, user=Depends(get_user_dep)):
     try:
         response = quiz_table.get_item(Key={"quizId": quiz_id})
     except Exception as e:
@@ -49,7 +49,7 @@ def get_quiz(quiz_id: str, user=Depends(get_current_user())):
     return response["Item"]
 
 @router.post("/")
-def create_quiz(quiz: Quiz, user=Depends(get_current_user())):    
+def create_quiz(quiz: Quiz, user=Depends(get_user_dep)):    
     if user is None:
         raise HTTPException(status_code=401, detail="User not logged in")
     quiz_id = str(uuid.uuid4())
@@ -65,7 +65,7 @@ def create_quiz(quiz: Quiz, user=Depends(get_current_user())):
     return {"success": True, "quizId": quiz_id}
 
 @router.delete("/{quiz_id}")
-def delete_quiz(quiz_id: str, user=Depends(get_current_user())):
+def delete_quiz(quiz_id: str, user=Depends(get_user_dep)):
     response = quiz_table.get_item(Key={"quizId": quiz_id})
     if "Item" not in response:
         raise HTTPException(status_code=404, detail="Quiz not found")
@@ -81,18 +81,21 @@ def delete_quiz(quiz_id: str, user=Depends(get_current_user())):
     return {"success": True}
 
 @router.post("/{quiz_id}/submit")
-def submit_quiz(quiz_id: str, answers: AnswerSubmission, user=Depends(get_current_user)):
+def submit_quiz(quiz_id: str, submission: AnswerSubmission, user=Depends(get_user_dep)):
     response = quiz_table.get_item(Key={"quizId": quiz_id})
     if "Item" not in response:
         raise HTTPException(status_code=404, detail="Quiz not found")
 
     quiz = response["Item"]
+    
+    users_answers = submission.answers
     correct = 0
-    total = len(quiz.get("questions", []))
+    questions = quiz.get("questions", [])
+    total = len(questions)
 
     for question in quiz.get("questions", []):
         qid = question.get("id")
-        if answers.get(qid) == question.get("correct_option"):
+        if users_answers.get(qid) == question.get("correct_option"):
             correct += 1
     score_percent = correct / total * 100 if total > 0 else 0
 
