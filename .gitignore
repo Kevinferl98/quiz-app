@@ -7,5 +7,5 @@ __pycache__/
 *.py[cod]
 .coverage
 
-# Test articats
+# Test artifacts
 .pytest_cache
