@@ -8,16 +8,6 @@ from decimal import Decimal
 
 router = APIRouter(prefix="/quizzes", tags=["quizzes"])
 
-'''@router.get("/")
-def list_quizzes(user=Depends(get_current_user)):
-    try:
-        response = quiz_table.scan(ProjectionExpression="quizId, title")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"DB error: {str(e)}")
-    
-    quizzes = [q for q in response.get("Items", []) if q.get("is_public", True) or q.get("owner_id") == user["sub"]]
-    return {"quizzes": quizzes}'''
-
 @router.get("/public")
 def list_public_quizzes():
     try:
@@ -32,7 +22,7 @@ def list_public_quizzes():
     return {"quizzes": response.get("Items", [])}
 
 @router.get("/mine")
-def list_my_quizzes(user=Depends(get_current_user)):
+def list_my_quizzes(user=Depends(get_current_user())):
     if not user:
         raise HTTPException(status_code=403, detail="Login required")
     
@@ -47,7 +37,7 @@ def list_my_quizzes(user=Depends(get_current_user)):
     return {"quizzes": response.get("Items", [])}
 
 @router.get("/{quiz_id}")
-def get_quiz(quiz_id: str, user=Depends(get_current_user)):
+def get_quiz(quiz_id: str, user=Depends(get_current_user())):
     try:
         response = quiz_table.get_item(Key={"quizId": quiz_id})
     except Exception as e:
@@ -59,7 +49,9 @@ def get_quiz(quiz_id: str, user=Depends(get_current_user)):
     return response["Item"]
 
 @router.post("/")
-def create_quiz(quiz: Quiz, user=Depends(get_current_user)):    
+def create_quiz(quiz: Quiz, user=Depends(get_current_user())):    
+    if user is None:
+        raise HTTPException(status_code=401, detail="User not logged in")
     quiz_id = str(uuid.uuid4())
     item = quiz.model_dump()
     item["quizId"] = quiz_id
@@ -73,7 +65,7 @@ def create_quiz(quiz: Quiz, user=Depends(get_current_user)):
     return {"success": True, "quizId": quiz_id}
 
 @router.delete("/{quiz_id}")
-def delete_quiz(quiz_id: str, user=Depends(get_current_user)):
+def delete_quiz(quiz_id: str, user=Depends(get_current_user())):
     response = quiz_table.get_item(Key={"quizId": quiz_id})
     if "Item" not in response:
         raise HTTPException(status_code=404, detail="Quiz not found")
