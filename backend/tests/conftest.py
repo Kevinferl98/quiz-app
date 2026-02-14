@@ -1,7 +1,6 @@
 import pytest
 from app.main import app
 from app.auth import get_user_dep
-from fastapi.testclient import TestClient
 
 mock_user = {"sub": "user_123"}
 
