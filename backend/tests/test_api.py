@@ -13,6 +13,15 @@ def test_list_public_quizzes(mock_scan):
     assert response.json() == {"quizzes": [{"quizId": "1", "title": "Quiz 1"}]}
 
 @patch("app.services.quiz_service.quiz_table.scan")
+def test_list_public_quizzes_db_error(mock_scan):
+    mock_scan.side_effect = Exception("DynamoDB connection failed")
+    
+    response = client.get("/quizzes/public")
+    
+    assert response.status_code == 500
+    assert response.json() == {"detail": "An unexpected error occurred while accessing the database"}
+
+@patch("app.services.quiz_service.quiz_table.scan")
 def test_list_my_quizzes(mock_scan):
     mock_scan.return_value = {"Items": [{"quizId": "2", "title": "My Quiz"}]}
     response = client.get("/quizzes/mine")
