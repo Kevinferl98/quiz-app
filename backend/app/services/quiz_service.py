@@ -1,6 +1,10 @@
 from app.db.dynamodb_client import quiz_table, results_table
 from decimal import Decimal
 import uuid
+from app.websockets import room_manager
+from app.models.multiplayer import Room
+from app.models.quiz import Quiz, Question
+from typing import Dict
 
 def list_public_quizzes():
     response = quiz_table.scan(
@@ -75,3 +79,16 @@ def submit_quiz(quiz_id: str, answers: dict, user_id: str) -> dict:
         "correct": correct,
         "score_percent": score_percent
     }
+
+def create_room(quiz_id: str, user_id: str, quiz: Dict) -> dict:
+    room_id = str(uuid.uuid4())
+    quiz_obj = Quiz(**quiz)
+    room = Room(
+        room_id=room_id,
+        quiz_id=quiz_id,
+        owner_id=user_id,
+        questions=[Question(**q.dict()) for q in quiz_obj.questions]
+    )
+
+    room_manager.active_rooms[room_id] = room
+    return {"room_id": room_id}

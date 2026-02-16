@@ -100,3 +100,15 @@ def submit_quiz(quiz_id: str, submission: AnswerSubmission, user=Depends(get_use
     except Exception as e:
         logger.error(f"DB error submitting quiz {quiz_id} for user {user['sub']}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=DB_ERROR_MSG)
+    
+@router.post("/{quiz_id}/create_room")
+def create_room(quiz_id: str, user=Depends(get_user_dep)):
+    if user is None:
+        raise HTTPException(status_code=401, detail="User not logged in")
+    
+    quiz = quiz_service.get_quiz_by_id(quiz_id)
+    if not quiz:
+        logger.warning(f"Quiz {quiz_id} not found")
+        raise HTTPException(status_code=404, detail="Quiz not found")
+
+    return quiz_service.create_room(quiz_id, user["sub"], quiz)
