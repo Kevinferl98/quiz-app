@@ -18,6 +18,7 @@ async def weboscket_room(websocket: WebSocket, room_id: str, player_id: str):
         )
 
     room = room_manager.active_rooms[room_id]
+    role = "host" if player_id == room.owner_id else "player"
 
     try:
         while True:
@@ -25,6 +26,8 @@ async def weboscket_room(websocket: WebSocket, room_id: str, player_id: str):
             action = data.get("type")
 
             if action == "join":
+                if role == "host":
+                    continue
                 name = data.get("name", "Guest")
 
                 if not any(p.player_id == player_id for p in room.players):
@@ -38,26 +41,44 @@ async def weboscket_room(websocket: WebSocket, room_id: str, player_id: str):
                 })
 
             elif action == "start":
-                if player_id == room.owner_id:
-                    await room_manager.start_quiz(room)
+                if role != "host":
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": "Only host can start the quiz"
+                    })
+                    continue
+                await room_manager.start_quiz(room)
 
             elif action == "answer":
+                if role != "player":
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": "Host cannot answer"
+                    })
+                    continue
+
                 answer = data.get("answe")
                 for p in room.players:
                     if p.player_id == player_id:
                         p.current_answer = answer
                         break
+            else:
+                await websocket.send_json({
+                    "type": "error",
+                    "message": "Unknown action"
+                })
     
     except WebSocketDisconnect:
         logger.info(f"{player_id} disconnected from {room_id}")
 
-        room.players = [
-            p for p in room.players if p.player_id != player_id
-        ]
+        if role == "player":
+            room.players = [
+                p for p in room.players if p.player_id != player_id
+            ]
+
+            await room_manager.broadcast(room_id, {
+                "type": "player_left",
+                "players": [p.name for p in room.players]
+            })
 
         await room_manager.disconnect(room_id, websocket)
-
-        await room_manager.broadcast(room_id, {
-            "type": "player_left",
-            "players": [p.name for p in room.players]
-        })
