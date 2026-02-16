@@ -1,24 +1,24 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from app.models.multiplayer import Room, Player
+from app.models.multiplayer import Player
 import logging
-from app.websockets import room_manager
+from backend.app.room_manager import room_manager
+from app.services.redis_client import RedisClient
 
 router_ws = APIRouter()
 logger = logging.getLogger(__name__)
+redis_client = RedisClient()
 
 @router_ws.websocket("/ws/rooms/{room_id}/{player_id}")
 async def weboscket_room(websocket: WebSocket, room_id: str, player_id: str):
     await room_manager.connect(room_id, websocket)
 
-    if room_id not in room_manager.active_rooms:
-        room_manager.active_rooms[room_id] = Room(
-            room_id=room_id,
-            quiz_id="",
-            owner_id=player_id
-        )
+    room_meta = await redis_client.get_room_meta(room_id)
+    if not room_meta:
+        await websocket.send_json({"type": "error", "message": "Room not found"})
+        await websocket.close()
+        return
 
-    room = room_manager.active_rooms[room_id]
-    role = "host" if player_id == room.owner_id else "player"
+    role = "host" if player_id == room_meta["owner_id"] else "player"
 
     try:
         while True:
@@ -28,16 +28,15 @@ async def weboscket_room(websocket: WebSocket, room_id: str, player_id: str):
             if action == "join":
                 if role == "host":
                     continue
+
                 name = data.get("name", "Guest")
 
-                if not any(p.player_id == player_id for p in room.players):
-                    room.players.append(
-                        Player(player_id=player_id, name=name)
-                    )
-                
+                await redis_client.add_player(room_id, Player(player_id=player_id, name=name))
+
+                players = await redis_client.get_players(room_id)
                 await room_manager.broadcast(room_id, {
                     "type": "player_joined",
-                    "players": [p.name for p in room.players]
+                    "players": [p["name"] for p in players]
                 })
 
             elif action == "start":
@@ -47,21 +46,21 @@ async def weboscket_room(websocket: WebSocket, room_id: str, player_id: str):
                         "message": "Only host can start the quiz"
                     })
                     continue
-                await room_manager.start_quiz(room)
+
+                await room_manager.start_quiz(room_id)
 
             elif action == "answer":
                 if role != "player":
-                    await websocket.send_json({
-                        "type": "error",
-                        "message": "Host cannot answer"
-                    })
                     continue
 
-                answer = data.get("answe")
-                for p in room.players:
-                    if p.player_id == player_id:
-                        p.current_answer = answer
-                        break
+                answer = data.get("answer")
+
+                room_meta = await redis_client.get_room_meta(room_id)
+                if not room_meta:
+                    continue
+
+                question_index = room_meta.get("current_question_index", 0)
+                await redis_client.save_answer(room_id, question_index, player_id, answer)
             else:
                 await websocket.send_json({
                     "type": "error",
@@ -72,13 +71,12 @@ async def weboscket_room(websocket: WebSocket, room_id: str, player_id: str):
         logger.info(f"{player_id} disconnected from {room_id}")
 
         if role == "player":
-            room.players = [
-                p for p in room.players if p.player_id != player_id
-            ]
+            await redis_client.remove_player(room_id, player_id)
 
+            players = await redis_client.get_players(room_id)
             await room_manager.broadcast(room_id, {
                 "type": "player_left",
-                "players": [p.name for p in room.players]
+                "players": [p["name"] for p in players]
             })
 
         await room_manager.disconnect(room_id, websocket)
