@@ -1,7 +1,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.models.multiplayer import Player
 import logging
-from backend.app.room_manager import room_manager
+from app.room_manager import room_manager
 from app.services.redis_client import RedisClient
 
 router_ws = APIRouter()
