@@ -1,5 +1,6 @@
 import redis.asyncio as redis
 from app.models.quiz import Question
+from app.models.multiplayer import Player
 from app.config import config
 import json
 
