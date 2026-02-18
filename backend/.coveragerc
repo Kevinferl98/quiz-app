@@ -1,0 +1,12 @@
+[run]
+omit =
+    quiz_service/app/services/grpc_generated/*
+    *_pb2.py
+    *_pb2_grpc.py
+
+[report]
+show_missing = True
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if __name__ == .__main__.:
