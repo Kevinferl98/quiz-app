@@ -1,85 +1,60 @@
-.container {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #f3f4f6;
-  padding: 16px;
-  box-sizing: border-box;
-}
-
-.card {
-  background: white;
-  padding: 32px 24px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  width: 100%;
-  max-width: 400px;
-  box-sizing: border-box;
-}
-
-.title {
-  font-size: 1.75rem;
-  font-weight: 700;
+.home-container {
+  max-width: 800px;
+  margin: 32px auto;
+  padding: 24px;
   text-align: center;
-  margin-bottom: 24px;
-  color: #111827;
-}
-
-.form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
-.input {
-  padding: 12px 14px;
-  font-size: 1rem;
-  border: 1.5px solid #d1d5db;
+.join-room {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.join-room input {
+  padding: 10px;
   border-radius: 8px;
-  outline-offset: 2px;
-  transition: border-color 0.2s ease;
+  border: 1px solid #d1d5db;
+  flex: 1;
+  max-width: 200px;
 }
 
-.input:focus {
-  border-color: #2563eb;
-  outline: none;
-}
-
-.button {
-  padding: 12px;
+.join-room button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
   background-color: #2563eb;
   color: white;
-  font-weight: 600;
-  font-size: 1.1rem;
-  border: none;
+  cursor: pointer;
+}
+
+.main-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.main-actions button {
+  padding: 10px 16px;
   border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.button:hover {
-  background-color: #1d4ed8;
-}
-
-.text-center {
-  margin-top: 20px;
-  font-size: 0.9rem;
-  color: #6b7280;
-  text-align: center;
-}
-
-.link-button {
-  background: none;
   border: none;
-  color: #2563eb;
-  text-decoration: underline;
+  background-color: #22c55e;
+  color: white;
   cursor: pointer;
-  padding: 0;
-  font-size: 0.9rem;
-  font-weight: 600;
 }
 
-.link-button:hover {
-  color: #1d4ed8;
+.quiz-list-section {
+  text-align: left;
+}
+
+.quiz-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  margin-bottom: 8px;
 }

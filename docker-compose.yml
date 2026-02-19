@@ -48,6 +48,17 @@ services:
       - redis_data:/data
     networks:
       - backend_net
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - quiz-service
+      - game-service
+    networks:
+      - backend_net
     
 networks:
   backend_net:
