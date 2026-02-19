@@ -9,16 +9,29 @@ services:
     networks:
       - backend_net
 
-  backend:
-    build: ./backend
-    container_name: backend
+  quiz-service:
+    build: ./backend/quiz_service
+    container_name: quiz_service
     ports:
-      - "8001:8000"
+      - "8001:8001"
+      - "50051:50051"
     environment:
       IS_LOCAL: "true"
       USE_LOCAL_AUTH: "true"
     depends_on:
       dynamodb: { condition: service_started }
+    networks:
+      - backend_net
+
+  game-service:
+    build: ./backend/game_service
+    container_name: game_service
+    ports:
+      - "8002:8002"
+    environment:
+      IS_LOCAL: "true"
+      USE_LOCAL_AUTH: "true"
+    depends_on:
       redis: { condition: service_healthy }
     networks:
       - backend_net

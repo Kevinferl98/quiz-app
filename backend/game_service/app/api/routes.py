@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.services import room_service
 from app.auth import get_user_dep
+from app.services.quiz_grpc_client import get_quiz_by_id
 import logging
 
 logger = logging.getLogger(__name__)
@@ -11,7 +12,7 @@ async def create_room(quiz_id: str, user=Depends(get_user_dep)):
     if user is None:
         raise HTTPException(status_code=401, detail="User not logged in")
     
-    quiz_data = quiz_service.get_quiz_by_id(quiz_id)
+    quiz_data = await get_quiz_by_id(quiz_id)
     if not quiz_data:
         logger.warning(f"Quiz {quiz_id} not found")
         raise HTTPException(status_code=404, detail="Quiz not found")

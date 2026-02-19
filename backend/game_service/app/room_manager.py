@@ -91,7 +91,7 @@ class RoomManager:
 
                 await self.broadcast(room_id, {
                     "type": "question",
-                    "question": question.model_dump(),
+                    "question": question,
                     "index": idx
                 })
 
@@ -104,7 +104,7 @@ class RoomManager:
 
                 answers = await redis_client.get_answers(room_id, idx)
                 for pid, ans in answers.items():
-                    if ans == question.correct_option:
+                    if ans == question["correct_option"]:
                         await redis_client.increment_score(room_id, pid)
 
                 await redis_client.delete_answers(room_id, idx)

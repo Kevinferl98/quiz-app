@@ -1,6 +1,10 @@
 [run]
+source = 
+    quiz_service
+    game_service
+
 omit =
-    quiz_service/app/services/grpc_generated/*
+    **/grpc_generated/**
     *_pb2.py
     *_pb2_grpc.py
 
@@ -8,5 +12,3 @@ omit =
 show_missing = True
 exclude_lines =
     pragma: no cover
-    def __repr__
-    if __name__ == .__main__.:

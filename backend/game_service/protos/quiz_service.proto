@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+message Question {
+    string id = 1;
+    string question_text = 2;
+    repeated string options = 3;
+    string correct_option = 4;
+}
+
+message Quiz {
+    string quizId = 1;
+    string title = 2;
+    repeated Question questions = 3;
+}
+
+message GetQuizRequest {
+    string quizId = 1;
+}
+
+service QuizService {
+    rpc GetQuizById(GetQuizRequest) returns (Quiz);
+}
