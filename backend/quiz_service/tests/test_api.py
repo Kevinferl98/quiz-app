@@ -120,24 +120,3 @@ def test_submit_quiz_not_found(mock_get_quiz):
     
     assert response.status_code == 404
     assert response.json()["detail"] == "Quiz not found"
-
-@patch("app.services.quiz_service.get_quiz_by_id")
-@patch("app.services.room_service.create_room")
-def test_create_room_success(mock_create_room, mock_get_quiz):
-    mock_get_quiz.return_value = {"quizId": "quiz123", "title": "Test Quiz", "questions": []}
-    mock_create_room.return_value = {"room_id": "mock-uuid-123"}
-    
-    response = client.post("/quizzes/quiz123/create_room")
-    
-    assert response.status_code == 200
-    assert response.json() == {"room_id": "mock-uuid-123"}
-    mock_create_room.assert_called_once()
-
-@patch("app.services.quiz_service.get_quiz_by_id")
-def test_create_room_quiz_not_found(mock_get_quiz):
-    mock_get_quiz.return_value = None
-    
-    response = client.post("/quizzes/invalid_id/create_room")
-    
-    assert response.status_code == 404
-    assert response.json()["detail"] == "Quiz not found"

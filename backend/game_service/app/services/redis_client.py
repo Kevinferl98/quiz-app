@@ -1,5 +1,4 @@
 import redis.asyncio as redis
-from app.models.quiz import Question
 from app.models.multiplayer import Player
 from app.config import config
 import json
@@ -30,25 +29,27 @@ class RedisClient:
     async def delete_room_meta(self, room_id: str):
         await self.redis.delete(f"room:{room_id}")
 
-    async def save_questions(self, room_id: str, questions: list[Question], ttl_seconds: int = 3600):
-        qlist = [q.model_dump() for q in questions]
-        await self.redis.set(f"room:{room_id}:questions", json.dumps(qlist), ex=ttl_seconds)
+    async def save_questions(self, room_id: str, questions: list[dict], ttl_seconds: int = 3600):
+        await self.redis.set(f"room:{room_id}:questions", json.dumps(questions), ex=ttl_seconds)
     
     async def get_question(self, room_id: str, index: int):
         data = await self.redis.get(f"room:{room_id}:questions")
         if not data:
             return None
+        
         qlist = json.loads(data)
+        
         if index < 0 or index >= len(qlist):
             return None
-        return Question.model_validate(qlist[index])
+        
+        return qlist[index]
     
-    async def get_all_questions(self, room_id: str) -> list[Question] | None:
+    async def get_all_questions(self, room_id: str) -> list[dict] | None:
         data = await self.redis.get(f"room:{room_id}:questions")
         if not data:
             return None
-        qlist = json.loads(data)
-        return [Question.model_validate(q) for q in qlist]
+        
+        return json.loads(data)
 
     async def delete_questions(self, room_id: str):
         await self.redis.delete(f"room:{room_id}:questions")

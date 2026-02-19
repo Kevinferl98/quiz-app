@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from app.models.quiz import Question
 
 class Player(BaseModel):
     player_id: str
@@ -16,5 +15,4 @@ class Room(BaseModel):
     started: bool = False
     current_question_index: int = 0
     question_timer: Optional[int] = None
-    questions: List[Question] = Field(default_factory=list)
     show_leaderboard: bool = False

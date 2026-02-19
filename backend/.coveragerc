@@ -1,0 +1,14 @@
+[run]
+source = 
+    quiz_service
+    game_service
+
+omit =
+    **/grpc_generated/**
+    *_pb2.py
+    *_pb2_grpc.py
+
+[report]
+show_missing = True
+exclude_lines =
+    pragma: no cover

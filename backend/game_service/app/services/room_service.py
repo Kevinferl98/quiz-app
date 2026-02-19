@@ -1,13 +1,10 @@
-from typing import Dict, Any
 import uuid
-from app.models.quiz import Quiz
 from app.services.redis_client import RedisClient
 
 redis_client = RedisClient()
 
-async def create_room(quiz_id: str, user_id: str, quiz: Dict[str, Any]) -> dict:
+async def create_room(quiz_id: str, user_id: str, quiz_data: dict) -> dict:
     room_id = str(uuid.uuid4())
-    quiz_obj = Quiz(**quiz)
 
     await redis_client.save_room_meta(
         room_id=room_id,
@@ -20,7 +17,7 @@ async def create_room(quiz_id: str, user_id: str, quiz: Dict[str, Any]) -> dict:
 
     await redis_client.save_questions(
         room_id=room_id,
-        questions=quiz_obj.questions,
+        questions=quiz_data.get("questions", []),
         ttl_seconds=3600
     )
 

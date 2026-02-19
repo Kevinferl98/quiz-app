@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 from app.room_manager import RoomManager
 
 @pytest.fixture
@@ -71,13 +71,15 @@ async def test_start_quiz_creates_task(manager, mock_ws, mock_redis):
 async def test_run_quiz_flow(manager, mock_ws, mock_redis):
     room_id = "test_room"
     mock_meta = {"owner_id": "user1", "quiz_id": "q1"}
-    mock_question = MagicMock()
-    mock_question.model_dump.return_value = {"text": "2+2?", "options": ["3", "4"], "correct_option": "4"}
-    mock_question.correct_option = "4"
+    mock_question = {
+        "text": "2+2?", 
+        "options": ["3", "4"], 
+        "correct_option": "4"
+    }
 
     mock_redis.get_room_meta.return_value = mock_meta
     mock_redis.get_all_questions.return_value = [mock_question]
-    mock_redis.get_answers.return_value = {"player1": "4"}
+    mock_redis.get_answers.return_value = {"player1": "4"} 
     mock_redis.get_players.return_value = [{"name": "P1", "score": 10}]
 
     await manager.connect(room_id, mock_ws)
