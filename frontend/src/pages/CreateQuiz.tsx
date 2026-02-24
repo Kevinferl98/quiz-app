@@ -73,10 +73,13 @@ export default function CreateQuiz() {
     }));
 
     try {
-      const data: QuizResponse = await apiFetch("http://quiz-service:8001/quizzes", {
-        method: "POST",
-        body: JSON.stringify({title, questions: formattedQuestions})
-      });
+      const data: QuizResponse = await apiFetch("http://quiz-service:8001/quizzes", 
+        {
+          method: "POST",
+          body: JSON.stringify({title, questions: formattedQuestions})
+        },
+        true
+    );
       
       console.log("Quiz created with ID: ", data.quizId);
       navigate("/");
