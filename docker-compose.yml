@@ -1,38 +1,20 @@
 services:
-  dynamodb:
-    image: amazon/dynamodb-local
-    container_name: dynamodb_local
-    ports:
-      - "8000:8000"
+  # --- INFRASTRUCTURE ---
+  postgres:
+    image: postgres:18.2-alpine3.22
+    container_name: keycloak_db
+    environment:
+      POSTGRES_DB: keycloak 
+      POSTGRES_USER: ${POSTGRES_USER} 
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - dynamodb_data:/home/dynamodblocal/data
-    networks:
-      - backend_net
-
-  quiz-service:
-    build: ./backend/quiz_service
-    container_name: quiz_service
-    ports:
-      - "8001:8001"
-      - "50051:50051"
-    environment:
-      IS_LOCAL: "true"
-      USE_LOCAL_AUTH: "true"
-    depends_on:
-      dynamodb: { condition: service_started }
-    networks:
-      - backend_net
-
-  game-service:
-    build: ./backend/game_service
-    container_name: game_service
-    ports:
-      - "8002:8002"
-    environment:
-      IS_LOCAL: "true"
-      USE_LOCAL_AUTH: "true"
-    depends_on:
-      redis: { condition: service_healthy }
+      - keycloak_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - backend_net
 
@@ -49,6 +31,68 @@ services:
     networks:
       - backend_net
 
+  dynamodb:
+    image: amazon/dynamodb-local:3.3.0
+    container_name: dynamodb_local
+    ports:
+      - "8000:8000"
+    networks:
+      - backend_net
+
+  # --- IDENTITY PROVIDER ---
+  keycloak:
+    image: keycloak/keycloak:26.5
+    container_name: keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./keycloak/quiz-realm.json:/opt/keycloak/data/import/quiz-realm.json:ro
+    depends_on:
+      postgres: 
+        condition: service_healthy
+    networks:
+      - backend_net
+
+  # --- BACKEND SERVICES ---
+  quiz-service:
+    build: ./backend/quiz_service
+    container_name: quiz_service
+    ports:
+      - "8001:8001"
+      - "50051:50051"
+    environment:
+      IS_LOCAL: "true"
+      USE_LOCAL_AUTH: "true"
+    depends_on:
+      dynamodb: 
+        condition: service_started
+    networks:
+      - backend_net
+
+  game-service:
+    build: ./backend/game_service
+    container_name: game_service
+    ports:
+      - "8002:8002"
+    environment:
+      IS_LOCAL: "true"
+      USE_LOCAL_AUTH: "true"
+    depends_on:
+      redis: 
+        condition: service_healthy
+    networks:
+      - backend_net
+
+  # --- FRONTEND ---
   frontend:
     build: ./frontend
     container_name: frontend
@@ -65,5 +109,5 @@ networks:
     driver: bridge
 
 volumes:
-  dynamodb_data:
   redis_data:
+  keycloak_db_data:

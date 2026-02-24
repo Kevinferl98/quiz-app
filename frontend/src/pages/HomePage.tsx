@@ -1,6 +1,7 @@
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect, ChangeEvent, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../api/api";
+import { AuthContext } from "../auth/AuthProvider";
 import "../styles/HomePage.css";
 
 interface Quiz {
@@ -20,6 +21,10 @@ export default function HomePage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [roomCode, setRoomCode] = useState<string>("");
+  
+  const { keycloak, authenticated } = useContext(AuthContext);
+  const handleLogin = () => keycloak.login();
+  const handleLogout = () => keycloak.logout({ redirectUri: window.location.origin });
 
   // Load quizzes
   useEffect(() => {
@@ -50,14 +55,38 @@ export default function HomePage() {
     navigate(`/solo-quiz/${quizId}`);
   };
 
-  const handleCreateQuiz = () => navigate("/create");
-  const handleCreateRoom = () => navigate("/create-room");
+  const handleCreateQuiz = () => {
+    if (!authenticated) {
+      keycloak.login();
+      return;
+    }
+    navigate("/create");
+  }
+  const handleCreateRoom = () => {
+    if (!authenticated) {
+      keycloak.login();
+      return;
+    }
+    navigate("/create-room"); 
+  }
   const handleRoomCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
     setRoomCode(e.target.value);
   };
 
   return (
     <div className="home-container">
+      <div className="auth-bar">
+        {!authenticated ? (
+          <button onClick={handleLogin}>Login / Sign Up</button>
+        ) : (
+          <>
+            <span>
+              Welcome {keycloak.tokenParsed?.preferred_username}
+            </span>
+            <button onClick={handleLogout}>Logout</button>
+          </>
+        )}
+      </div>
       <h1>Quiz App</h1>
 
       {/* Room code input */}
