@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.services import quiz_service
-from app.auth import get_user_dep
+from app.auth import get_current_user
 from app.models.quiz import Quiz, AnswerSubmission
 import logging
 
@@ -20,7 +20,7 @@ def list_public_quizzes():
         raise HTTPException(status_code=500, detail=DB_ERROR_MSG)
 
 @router.get("/mine")
-def list_my_quizzes(user=Depends(get_user_dep)):
+def list_my_quizzes(user=Depends(get_current_user)):
     if not user:
         logger.warning("Unauthorized attempt to list personal quizzes")
         raise HTTPException(status_code=403, detail="Login required")
@@ -34,7 +34,7 @@ def list_my_quizzes(user=Depends(get_user_dep)):
         raise HTTPException(status_code=500, detail=DB_ERROR_MSG)
 
 @router.get("/{quiz_id}")
-def get_quiz(quiz_id: str, user=Depends(get_user_dep)):
+def get_quiz(quiz_id: str, user=Depends(get_current_user)):
     try:
         quiz = quiz_service.get_quiz_by_id(quiz_id)
         if not quiz:
@@ -50,7 +50,7 @@ def get_quiz(quiz_id: str, user=Depends(get_user_dep)):
         raise HTTPException(status_code=500, detail=DB_ERROR_MSG)
 
 @router.post("/")
-def create_quiz(quiz: Quiz, user=Depends(get_user_dep)):    
+def create_quiz(quiz: Quiz, user=Depends(get_current_user)):    
     if user is None:
         raise HTTPException(status_code=401, detail="User not logged in")
     
@@ -66,7 +66,7 @@ def create_quiz(quiz: Quiz, user=Depends(get_user_dep)):
         raise HTTPException(status_code=500, detail=DB_ERROR_MSG)
 
 @router.delete("/{quiz_id}")
-def delete_quiz(quiz_id: str, user=Depends(get_user_dep)):
+def delete_quiz(quiz_id: str, user=Depends(get_current_user)):
     if user is None:
         raise HTTPException(status_code=401, detail="User not logged in")
 
@@ -83,7 +83,7 @@ def delete_quiz(quiz_id: str, user=Depends(get_user_dep)):
         raise HTTPException(status_code=500, detail=DB_ERROR_MSG)
 
 @router.post("/{quiz_id}/submit")
-def submit_quiz(quiz_id: str, submission: AnswerSubmission, user=Depends(get_user_dep)):
+def submit_quiz(quiz_id: str, submission: AnswerSubmission, user=Depends(get_current_user)):
     if user is None:
         raise HTTPException(status_code=401, detail="User not logged in")
 

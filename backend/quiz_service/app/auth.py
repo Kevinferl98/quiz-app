@@ -1,18 +1,39 @@
-from fastapi import Header
+from fastapi import Header, HTTPException
 import os
+import jwt
+from jwt import PyJWKClient
+
+KEYCLOAK_URL = os.getenv("KEYCLOAK_URL")
+REALM = os.getenv("KEYCLOAK_REALM")
+CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
+
+JWKS_URL = f"{KEYCLOAK_URL}/realms/{REALM}/protocol/openid-connect/certs"
+
+jwks_client = PyJWKClient(JWKS_URL)
 
 USE_LOCAL_AUTH = os.getenv("USE_LOCAL_AUTH", "true").lower() == "true"
 
-def get_current_user_mock(x_user_id: str = Header(None, description="User ID")):
-    if not x_user_id:
-        return None
-    return {"sub": x_user_id}
+def get_current_user(authorization: str = Header(...)):
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Bearer token missing")
+    
+    token = authorization.replace("Bearer ", "")
 
-def get_current_user_alb(x_auth_user: str = Header(None, description="User ID")):
-    if not x_auth_user:
-        return None
-    return {"sub": x_auth_user}
+    try:
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
 
-_current_user_func = get_current_user_mock if USE_LOCAL_AUTH else get_current_user_alb
+        payload = jwt.decode(
+            token,
+            signing_key.key,
+            algorithms=["RS256"],
+            audience=CLIENT_ID,
+            issuer=f"http://localhost:8081/realms/{REALM}",
+            options={
+                "verify_exp": True,
+                "verify_iss": True
+            }
+        )
 
-get_user_dep = _current_user_func
+        return payload
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")

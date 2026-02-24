@@ -71,9 +71,13 @@ services:
       - "50051:50051"
     environment:
       IS_LOCAL: "true"
-      USE_LOCAL_AUTH: "true"
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: quiz
+      KEYCLOAK_CLIENT_ID: account
     depends_on:
       dynamodb: 
+        condition: service_started
+      keycloak:
         condition: service_started
     networks:
       - backend_net
