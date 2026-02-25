@@ -75,3 +75,15 @@ def submit_quiz(quiz_id: str, answers: dict, user_id: str) -> dict:
         "correct": correct,
         "score_percent": score_percent
     }
+
+def check_answer(quiz_id: str, question_id: str, answer: str) -> bool:
+    quiz = get_quiz_by_id(quiz_id)
+
+    if not quiz:
+        raise ValueError("Quiz not found")
+    
+    question = next((q for q in quiz.get("questions", []) if q.get("id") == question_id), None)
+    if not question:
+        raise ValueError("Question not found in quiz")
+    
+    return question.get("correct_option") == answer

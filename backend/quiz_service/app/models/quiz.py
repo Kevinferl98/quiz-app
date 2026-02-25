@@ -17,3 +17,20 @@ class Quiz(BaseModel):
 
 class AnswerSubmission(BaseModel):
     answers: Dict[str, str]
+
+class QuestionOut(BaseModel):
+    id: str
+    question_text: str
+    options: List[str]
+
+class QuizOut(BaseModel):
+    quizId: str
+    title: str
+    questions: List[QuestionOut]
+
+class AnswerRequest(BaseModel):
+    question_id: str
+    answer: str
+
+class AnswerResponse(BaseModel):
+    correct: bool

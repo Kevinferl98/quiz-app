@@ -120,3 +120,25 @@ def test_submit_quiz_not_found(mock_get_quiz):
     
     assert response.status_code == 404
     assert response.json()["detail"] == "Quiz not found"
+
+@patch("app.services.quiz_service.quiz_table.get_item")
+def test_answer_question(mock_get_quiz):
+    mock_get_quiz.return_value = {
+        "Item": {
+            "quizId": "abc-123",
+            "title": "New Quiz",
+            "questions": [
+                {"id": "q1", "question_text": "Text", "options": ["A", "B"], "correct_option": "A"}
+            ]
+        }
+    }
+
+    payload = {
+        "question_id": "q1",
+        "answer": "A"
+    }
+
+    response = client.post("/quizzes/abc-123/answer", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["correct"] is True

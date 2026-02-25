@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.services import quiz_service
 from app.auth import get_current_user
-from app.models.quiz import Quiz, AnswerSubmission
+from app.models.quiz import (Quiz, AnswerSubmission, AnswerResponse, AnswerRequest)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def list_my_quizzes(user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=DB_ERROR_MSG)
 
 @router.get("/{quiz_id}")
-def get_quiz(quiz_id: str, user=Depends(get_current_user)):
+def get_quiz(quiz_id: str):
     try:
         quiz = quiz_service.get_quiz_by_id(quiz_id)
         if not quiz:
@@ -100,3 +100,11 @@ def submit_quiz(quiz_id: str, submission: AnswerSubmission, user=Depends(get_cur
     except Exception as e:
         logger.error(f"DB error submitting quiz {quiz_id} for user {user['sub']}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=DB_ERROR_MSG)
+    
+@router.post("/{quiz_id}/answer", response_model=AnswerResponse)
+def answer_question(quiz_id: str, payload: AnswerRequest):
+    try:
+        correct = quiz_service.check_answer(quiz_id, payload.question_id, payload.answer)
+        return AnswerResponse(correct=correct)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(4))
