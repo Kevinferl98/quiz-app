@@ -104,6 +104,9 @@ export default function HomePage() {
       <div className="main-actions">
         <button onClick={handleCreateQuiz}>Create New Quiz</button>
         <button onClick={handleCreateRoom}>Create New Room</button>
+        {authenticated && (
+          <button onClick={() => navigate("/my-quizzes")}>My Quizzes</button>
+        )}
       </div>
 
       {/* Available quizzes list */}
