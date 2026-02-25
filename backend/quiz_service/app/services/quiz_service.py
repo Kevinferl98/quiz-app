@@ -1,5 +1,4 @@
-from app.db.dynamodb_client import quiz_table, results_table
-from decimal import Decimal
+from app.db.dynamodb_client import quiz_table
 from typing import Dict, Any
 import uuid
 
