@@ -1,8 +1,9 @@
 from app.db.dynamodb_client import quiz_table, results_table
 from decimal import Decimal
+from typing import Dict, Any
 import uuid
 
-def list_public_quizzes():
+def list_public_quizzes() -> list[Dict[str, Any]]:
     response = quiz_table.scan(
         FilterExpression="is_public = :val",
         ExpressionAttributeValues={":val": True},
@@ -10,7 +11,7 @@ def list_public_quizzes():
     )
     return response.get("Items", [])
 
-def list_personal_quizzes(owner_id: str):
+def list_personal_quizzes(owner_id: str) -> list[Dict[str, Any]]:
     response = quiz_table.scan(
         FilterExpression="owner_id = :owner_id",
         ExpressionAttributeValues={":owner_id": owner_id}
@@ -18,11 +19,11 @@ def list_personal_quizzes(owner_id: str):
 
     return response.get("Items", [])
 
-def get_quiz_by_id(quiz_id: str):
+def get_quiz_by_id(quiz_id: str) -> Dict[str, Any] | None:
     response = quiz_table.get_item(Key={"quizId": quiz_id})
     return response.get("Item")
 
-def create_quiz(quiz_data: dict, owner_id: str):
+def create_quiz(quiz_data: dict, owner_id: str)  -> str:
     quiz_id = str(uuid.uuid4())
     quiz_data["quizId"] = quiz_id
     quiz_data["owner_id"] = owner_id
