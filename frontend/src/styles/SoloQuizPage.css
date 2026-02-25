@@ -1,0 +1,148 @@
+.quiz-container {
+  max-width: 800px;
+  margin: 32px auto;
+  padding: 24px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.quiz-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.quiz-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #111827;
+}
+
+.back-button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background-color: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.back-button:hover {
+  background-color: #1d4ed8;
+}
+
+.questions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.question-block {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.question-counter {
+  font-weight: 600;
+  color: #374151;
+}
+
+.question-text {
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.option-button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background-color: #f9fafb;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.option-button:hover:not(:disabled) {
+  background-color: #e5e7eb;
+}
+
+.option-button.correct {
+  background-color: #22c55e;
+  color: white;
+  border-color: #16a34a;
+}
+
+.option-button.wrong {
+  background-color: #dc2626;
+  color: white;
+  border-color: #b91c1c;
+}
+
+.option-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.result-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.result-section p {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.next-button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background-color: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.next-button:hover {
+  background-color: #1d4ed8;
+}
+
+.quiz-footer {
+  margin-top: 16px;
+  font-weight: bold;
+  text-align: right;
+  color: #374151;
+}
+
+@media (max-width: 500px) {
+  .quiz-container {
+    padding: 16px;
+  }
+
+  .option-button, .next-button, .back-button {
+    font-size: 0.95rem;
+    padding: 8px 12px;
+  }
+
+  .quiz-title {
+    font-size: 1.5rem;
+  }
+}
