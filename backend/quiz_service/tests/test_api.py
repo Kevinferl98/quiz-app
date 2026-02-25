@@ -1,7 +1,6 @@
 from unittest.mock import patch
 from fastapi.testclient import TestClient
 from app.main import app
-from decimal import Decimal
 
 client = TestClient(app)
 
@@ -73,53 +72,6 @@ def test_delete_quiz_forbidden(mock_get_item):
     }
     response = client.delete("/quizzes/abc-123")
     assert response.status_code == 403
-
-@patch("app.services.quiz_service.results_table.put_item")
-@patch("app.services.quiz_service.quiz_table.get_item")
-def test_submit_quiz_success(mock_get_quiz, mock_put_result):
-    mock_get_quiz.return_value = {
-        "Item": {
-            "quizId": "abc-123",
-            "title": "Math Quiz",
-            "questions": [
-                {"id": "q1", "question_text": "Text", "options": ["A", "B"], "correct_option": "A"},
-                {"id": "q2", "question_text": "Text", "options": ["A", "B"], "correct_option": "B"}
-            ]
-        }
-    }
-
-    user_answers = {
-        "answers": {
-            "q1": "A",
-            "q2": "C"
-        }
-    } 
-    
-    response = client.post("/quizzes/abc-123/submit", json=user_answers)
-
-    assert response.status_code == 200
-    data = response.json()
-    assert data["total"] == 2
-    assert data["correct"] == 1
-    assert data["score_percent"] == 50.0
-
-    called_result = mock_put_result.call_args[1]["Item"]
-    assert called_result["userId"] == "user_123"
-    assert called_result["score_percent"] == Decimal("50.0")
-    assert called_result["quizTitle"] == "Math Quiz"
-
-@patch("app.services.quiz_service.quiz_table.get_item")
-def test_submit_quiz_not_found(mock_get_quiz):
-    mock_get_quiz.return_value = {}
-    
-    payload = {
-        "answers": {"q1": "A"}
-    }
-    
-    response = client.post("/quizzes/invalid-id/submit", json=payload)
-    
-    assert response.status_code == 404
-    assert response.json()["detail"] == "Quiz not found"
 
 @patch("app.services.quiz_service.quiz_table.get_item")
 def test_answer_question(mock_get_quiz):

@@ -41,42 +41,6 @@ def delete_quiz(quiz_id: str, user_id: str) -> None:
 
     quiz_table.delete_item(Key={"quizId": quiz_id})
 
-
-def submit_quiz(quiz_id: str, answers: dict, user_id: str) -> dict:
-    response = quiz_table.get_item(Key={"quizId": quiz_id})
-
-    if "Item" not in response:
-        raise ValueError("Quiz not found")
-
-    quiz = response["Item"]
-    questions = quiz.get("questions", [])
-    total = len(questions)
-
-    correct = 0
-    for question in questions:
-        qid = question.get("id")
-        if answers.get(qid) == question.get("correct_option"):
-            correct += 1
-
-    score_percent = correct / total * 100 if total > 0 else 0
-
-    result_item = {
-        "userId": user_id,
-        "quizId": quiz_id,
-        "quizTitle": quiz.get("title", ""),
-        "score_percent": Decimal(str(score_percent)),
-        "correct": correct,
-        "total": total
-    }
-
-    results_table.put_item(Item=result_item)
-
-    return {
-        "total": total,
-        "correct": correct,
-        "score_percent": score_percent
-    }
-
 def check_answer(quiz_id: str, question_id: str, answer: str) -> bool:
     quiz = get_quiz_by_id(quiz_id)
 

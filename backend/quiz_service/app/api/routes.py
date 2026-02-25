@@ -101,25 +101,6 @@ def delete_quiz(quiz_id: str, user=Depends(get_current_user)):
     except Exception as e:
         logger.error(f"DB error deleting quiz {quiz_id} for user {user['sub']}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=DB_ERROR_MSG)
-
-@router.post("/{quiz_id}/submit")
-def submit_quiz(quiz_id: str, submission: AnswerSubmission, user=Depends(get_current_user)):
-    if user is None:
-        raise HTTPException(status_code=401, detail="User not logged in")
-
-    try:
-        result = quiz_service.submit_quiz(
-            quiz_id=quiz_id,
-            answers=submission.answers,
-            user_id=user["sub"]
-        )
-        logger.info(f"User {user['sub']} submitted quiz {quiz_id}")
-        return result
-    except ValueError:
-        raise HTTPException(status_code=404, detail="Quiz not found")
-    except Exception as e:
-        logger.error(f"DB error submitting quiz {quiz_id} for user {user['sub']}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=DB_ERROR_MSG)
     
 @router.post("/{quiz_id}/answer", response_model=AnswerResponse)
 def answer_question(quiz_id: str, payload: AnswerRequest):
