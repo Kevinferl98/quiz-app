@@ -89,10 +89,14 @@ services:
       - "8002:8002"
     environment:
       IS_LOCAL: "true"
-      USE_LOCAL_AUTH: "true"
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: quiz
+      KEYCLOAK_CLIENT_ID: account
     depends_on:
       redis: 
         condition: service_healthy
+      keycloak:
+        condition: service_started
     networks:
       - backend_net
 
