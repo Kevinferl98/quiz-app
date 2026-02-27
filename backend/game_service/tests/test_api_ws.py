@@ -106,21 +106,6 @@ def test_player_can_submit_answer(client_with_mocks):
         "C"
     )
 
-def test_host_answer_is_ignored(client_with_mocks):
-    client, mock_redis, mock_manager, mock_get_user = client_with_mocks
-
-    mock_get_user.return_value = {
-        "sub": "host_user",
-        "preferred_username": "Host"
-    }
-
-    mock_redis.get_room_meta.return_value = {"owner_id": "host_user"}
-
-    with client.websocket_connect("/ws/rooms/room123?token=fake") as websocket:
-        websocket.send_json({"type": "answer", "answer": "A"})
-
-    mock_redis.save_answer.assert_not_called()
-
 def test_unknown_action_returns_error(client_with_mocks):
     client, mock_redis, mock_manager, mock_get_user = client_with_mocks
 

@@ -97,8 +97,6 @@ async def weboscket_room(websocket: WebSocket, room_id: str):
                 await room_manager.start_quiz(room_id)
 
             elif action == "answer":
-                if role != "player":
-                    continue
 
                 answer = data.get("answer")
 
