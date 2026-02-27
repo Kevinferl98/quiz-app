@@ -4,6 +4,7 @@ import CreateQuiz from "./pages/CreateQuiz";
 import SoloQuizPage from "./pages/SoloQuizPage";
 import MyQuizzesPage from "./pages/MyQuizzesPage";
 import CreateGameRoom from "./pages/CreateGameRoom";
+import RoomPage from "./pages/RoomPage";
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="/create" element={<CreateQuiz />} />
         <Route path="/my-quizzes" element={<MyQuizzesPage />} />
         <Route path="/create-room" element={<CreateGameRoom />} />
+        <Route path="/room/:room_id" element={<RoomPage />} />
       </Routes>
     </Router>
   );

@@ -61,8 +61,7 @@ export default function CreateGameRoom() {
                 },
                 true
             );
-            console.log("room created");
-            //navigate(`/room/${room.roomId}`);
+            navigate(`/room/${room.room_id}`);
         } catch (err: any) {
             alert(err.message || "Error creating room");
         } finally {
