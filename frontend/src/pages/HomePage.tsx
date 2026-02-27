@@ -32,7 +32,7 @@ export default function HomePage() {
       setLoading(true);
       setError(null);
       try {
-        const data: QuizzesReponse = await apiFetch("http://quiz-service:8080/quizzes/public");
+        const data: QuizzesReponse = await apiFetch("http://quiz-service:8001/quizzes/public");
         setQuizzes(data.quizzes || []);
       } catch (err: any) {
         setError(err.message || "Error loading quizzes");

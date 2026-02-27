@@ -1,16 +1,37 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.models.multiplayer import Player
-import logging
 from app.room_manager import room_manager
 from app.services.redis_client import RedisClient
+from app.auth import get_current_user
+import logging
+import uuid
 
 router_ws = APIRouter()
 logger = logging.getLogger(__name__)
 redis_client = RedisClient()
 
-@router_ws.websocket("/ws/rooms/{room_id}/{player_id}")
-async def weboscket_room(websocket: WebSocket, room_id: str, player_id: str):
+@router_ws.websocket("/ws/rooms/{room_id}")
+async def weboscket_room(websocket: WebSocket, room_id: str):
     await room_manager.connect(room_id, websocket)
+
+    token = websocket.query_params.get("token")
+
+    user_payload = None
+    player_id = None
+    username = None
+
+    if token:
+        try:
+            user_payload = get_current_user(f"Bearer {token}")
+        except Exception:
+            user_payload = None
+
+    if user_payload:
+        player_id = user_payload.get("sub")
+        username = user_payload.get("preferred_username", "User")
+    else:
+        player_id = str(uuid.uuid4())
+        username = None
 
     room_meta = await redis_client.get_room_meta(room_id)
     if not room_meta:
@@ -20,16 +41,42 @@ async def weboscket_room(websocket: WebSocket, room_id: str, player_id: str):
 
     role = "host" if player_id == room_meta["owner_id"] else "player"
 
+    await websocket.send_json({
+        "type": "role",
+        "role": role,
+        "player_id": player_id
+    })
+
+    if role == "host" or user_payload:
+        await redis_client.add_player(
+            room_id,
+            Player(player_id=player_id, name=username)
+        )
+
+    players = await redis_client.get_players(room_id)
+    await room_manager.broadcast(room_id, {
+        "type": "player_joined",
+        "players": [p["name"] for p in players]
+    })
+
     try:
         while True:
             data = await websocket.receive_json()
             action = data.get("type")
 
             if action == "join":
-                if role == "host":
+                if user_payload:
                     continue
 
-                name = data.get("name", "Guest")
+                name = data.get("name")
+                if not name:
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": "Name required"
+                    })
+                    continue
+
+                username = name
 
                 await redis_client.add_player(room_id, Player(player_id=player_id, name=name))
 
@@ -50,8 +97,6 @@ async def weboscket_room(websocket: WebSocket, room_id: str, player_id: str):
                 await room_manager.start_quiz(room_id)
 
             elif action == "answer":
-                if role != "player":
-                    continue
 
                 answer = data.get("answer")
 

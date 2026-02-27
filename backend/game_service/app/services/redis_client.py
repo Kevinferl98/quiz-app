@@ -90,3 +90,6 @@ class RedisClient:
 
     async def increment_score(self, room_id: str, player_id: str, points: int = 1):
         await self.redis.hincrby(f"room:{room_id}:player:{player_id}", "score", points)
+
+    async def incr_counter(self, key: str) -> int:
+        return await self.redis.incr(key)

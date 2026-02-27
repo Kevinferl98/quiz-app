@@ -103,6 +103,12 @@ class RoomManager:
                     await asyncio.sleep(1)
 
                 answers = await redis_client.get_answers(room_id, idx)
+                
+                await self.broadcast(room_id, {
+                    "type": "answer_result",
+                    "correct_answer": question["correct_option"]
+                })
+                
                 for pid, ans in answers.items():
                     if ans == question["correct_option"]:
                         await redis_client.increment_score(room_id, pid)
