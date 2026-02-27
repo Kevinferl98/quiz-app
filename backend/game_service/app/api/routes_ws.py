@@ -53,7 +53,7 @@ async def weboscket_room(websocket: WebSocket, room_id: str):
             Player(player_id=player_id, name=username)
         )
 
-    players = await redis_client.get_players(room_id);
+    players = await redis_client.get_players(room_id)
     await room_manager.broadcast(room_id, {
         "type": "player_joined",
         "players": [p["name"] for p in players]
