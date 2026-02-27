@@ -1,10 +1,11 @@
-import uuid
 from app.services.redis_client import RedisClient
 
 redis_client = RedisClient()
+ROOM_COUNTER_KEY = "global_room_counter"
 
 async def create_room(quiz_id: str, user_id: str, quiz_data: dict) -> dict:
-    room_id = str(uuid.uuid4())
+    room_number = await redis_client.incr_counter(ROOM_COUNTER_KEY)
+    room_id = f"{room_number:05d}"
 
     await redis_client.save_room_meta(
         room_id=room_id,
