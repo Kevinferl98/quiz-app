@@ -64,6 +64,7 @@ export default function RoomPage() {
                     setLeaderboard([]);
                     setSelectedAnswer(null);
                     setCorrectAnswer(null);
+                    setTimer(data.question.duration || 15);
                     break;
                 case "timer":
                     setTimer(data.seconds);
@@ -86,6 +87,22 @@ export default function RoomPage() {
 
         ws.onclose = () => setConnected(false);
     };
+
+    useEffect(() => {
+        if (timer <= 0) return;
+
+        const interval = setInterval(() => {
+            setTimer((t) => {
+                if (t <= 1) {
+                    clearInterval(interval);
+                    return 0;
+                }
+                return t - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [timer]);
 
     useEffect(() => {
         if (!room_id) return;
@@ -136,7 +153,10 @@ export default function RoomPage() {
         <div className="room-container">
             <div className="top-bar">
                 <button className="primary-btn" onClick={() => navigate("/")}>Back to Home</button>
-                <span className="room-id">Room ID: {room_id}</span>
+                <div className="room-id-box">
+                    <span className="room-id-label">Room Code</span>
+                    <span className="room-id-value">{room_id}</span>
+                </div>
             </div>
 
             {!question && !gameEnded && (
@@ -172,22 +192,19 @@ export default function RoomPage() {
             
             {question && (
                 <div className="question-box">
-                    <h2>{question.question_text}</h2>
-                    <p>Time left: {timer}s</p>
+                    <div className="question-header">
+                        <h2 className="question-text">{question.question_text}</h2>
+                        <div className="timer-box">{timer}s</div>
+                    </div>
+                    
                     <div className="options">
                         {question.options.map((opt: string, i: number) => {
                             let className = "option-btn";
 
-                            if (selectedAnswer === opt) {
-                                className += " selected";
-                            }
-
+                            if (selectedAnswer === opt) className += " selected";
                             if (correctAnswer) {
-                                if (opt === correctAnswer) {
-                                    className += " correct";
-                                } else if (opt === selectedAnswer) {
-                                    className += " wrong";
-                                }
+                                if (opt === correctAnswer) className += " correct";
+                                else if (opt === selectedAnswer) className += " wrong";
                             }
 
                             return (
@@ -196,8 +213,7 @@ export default function RoomPage() {
                                     className={className}
                                     onClick={() => handleAnswer(opt)}
                                     disabled={!!selectedAnswer}
-                                >{opt}
-                                </button>
+                                >{opt}</button>
                             );
                         })}
                     </div>
@@ -205,17 +221,21 @@ export default function RoomPage() {
             )}
 
             {leaderboard.length > 0 && (
-                <div className="leaderboard">
-                    <h2>Leaderboard</h2>
-                    {leaderboard.map((entry, i) => (
-                        <div key={i}>
-                            {entry.name} - {entry.score}
-                        </div>
-                    ))}
+                <div className="leaderboard-box">
+                    <h2 className="leaderboard-title">Leaderboard</h2>
+                    <div className="leaderboard-grid">
+                        {leaderboard.map((entry, i) => (
+                            <div key={i} className="leaderboard-card">
+                                <span className="leaderboard-rank">{i+1}</span>
+                                <span className="leaderboard-name">{entry.name}</span>
+                                <span className="leaderboard-score">{entry.score}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 
-            {gameEnded && <h2>Game Finished!</h2>}
+            {gameEnded && <h2 className="game-ended-title">Game Finished!</h2>}
         </div>
     )
 }
