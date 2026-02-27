@@ -140,21 +140,34 @@ export default function RoomPage() {
             </div>
 
             {!question && !gameEnded && (
-                <>
-                    <h2>Waiting Room</h2>
-                    <p>Players:</p>
-                    <ul>
-                        {players.map((p, i) => (
-                            <li key={i}>{p}</li>
-                        ))}
-                    </ul>
+                <div className="waiting-room">
+                    <h2 className="waiting-title">Waiting Room</h2>
+                    <p className="waiting-subtitle">
+                        {players.length} player{players.length !== 1 && "s"} joined
+                    </p>
 
+                    <div className="players-grid">
+                        {players.map((p, i) => (
+                            <div key={i} className="player-card">
+                                <div className="player-avatar">
+                                    {p.charAt(0).toUpperCase()}
+                                </div>
+
+                                <div className="player-info">
+                                    <span className="player-name">{p}</span>
+                                    {role === "host" && i === 0 && (
+                                        <span className="host-badge">HOST</span>
+                                    )}
+                                </div>
+
+                                <div className="online-dot"/>
+                            </div>
+                        ))}
+                    </div>
                     {role === "host" && (
-                        <button className="primary-btn start-btn" onClick={handleStart}>
-                            Start Quiz
-                        </button>
+                        <button className="primary-btn start-btn big-start" onClick={handleStart}>Start Quiz</button>
                     )}
-                </>
+                </div>
             )}
             
             {question && (

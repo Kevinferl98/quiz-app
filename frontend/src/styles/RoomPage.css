@@ -113,3 +113,90 @@
   padding: 6px 0;
   font-weight: 500;
 }
+
+.waiting-room {
+  margin-top: 30px;
+}
+
+.waiting-title {
+  font-size: 26px;
+  margin-bottom: 4px;
+}
+
+.waiting-subtitle {
+  color: #6b7280;
+  margin-bottom: 24px;
+}
+
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #f9fafb, #eef2ff);
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.player-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.player-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-color: #6366f1;
+  color: white;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.player-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.player-name {
+  font-weight: 600;
+  color: #111827;
+}
+
+.host-badge {
+  font-size: 11px;
+  font-weight: bold;
+  color: white;
+  background-color: #f59e0b;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+.online-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #22c55e;
+  border-radius: 50%;
+  position: absolute;
+  right: 14px;
+  top: 14px;
+}
+
+.big-start {
+  padding: 12px 24px;
+  font-size: 16px;
+}
