@@ -1,7 +1,11 @@
-import redis.asyncio as redis
 from app.models.multiplayer import Player
 from app.config import config
+import redis.asyncio as redis
 import json
+import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 class RedisClient:
     def __init__(self):
@@ -93,3 +97,27 @@ class RedisClient:
 
     async def incr_counter(self, key: str) -> int:
         return await self.redis.incr(key)
+    
+    async def publish_room_message(self, room_id: str, message: dict):
+        try:
+            await self.redis.publish(
+                f"room_{room_id}",
+                json.dumps(message)
+            )
+        except Exception as e:
+            logger.warning(f"Error publishing to room {room_id}: {e}")
+
+    async def subscribe_rooms(self, handler):
+        pubsub = self.redis.pubsub()
+        await pubsub.psubscribe("room_*")
+
+        async for message in pubsub.listen():
+            if message["type"] == "pmessage":
+                channel = message["channel"]
+                room_id = channel.split("_")[1]
+
+                try:
+                    data = json.loads(message["data"])
+                    await handler(room_id, data)
+                except Exception as e:
+                    logger.warning(f"Error processing pubsub message: {e}")
