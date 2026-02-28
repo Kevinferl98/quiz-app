@@ -54,7 +54,7 @@ async def weboscket_room(websocket: WebSocket, room_id: str):
         )
 
     players = await redis_client.get_players(room_id)
-    await room_manager.broadcast(room_id, {
+    await room_manager.publish(room_id, {
         "type": "player_joined",
         "players": [p["name"] for p in players]
     })
@@ -81,7 +81,7 @@ async def weboscket_room(websocket: WebSocket, room_id: str):
                 await redis_client.add_player(room_id, Player(player_id=player_id, name=name))
 
                 players = await redis_client.get_players(room_id)
-                await room_manager.broadcast(room_id, {
+                await room_manager.publish(room_id, {
                     "type": "player_joined",
                     "players": [p["name"] for p in players]
                 })
@@ -119,7 +119,7 @@ async def weboscket_room(websocket: WebSocket, room_id: str):
             await redis_client.remove_player(room_id, player_id)
 
             players = await redis_client.get_players(room_id)
-            await room_manager.broadcast(room_id, {
+            await room_manager.publish(room_id, {
                 "type": "player_left",
                 "players": [p["name"] for p in players]
             })

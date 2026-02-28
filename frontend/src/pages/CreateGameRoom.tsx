@@ -55,7 +55,7 @@ export default function CreateGameRoom() {
             setCreatingRoomId(quizId);
 
             const room = await apiFetch(
-                `http://game-service:8002/quizzes/${quizId}/create_room`,
+                `http://nginx-lb:8082/quizzes/${quizId}/create_room`,
                 {
                     method: "POST"
                 },

@@ -84,9 +84,6 @@ services:
 
   game-service:
     build: ./backend/game_service
-    container_name: game_service
-    ports:
-      - "8002:8002"
     environment:
       IS_LOCAL: "true"
       KEYCLOAK_URL: http://keycloak:8080
@@ -97,6 +94,20 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_started
+    networks:
+      - backend_net
+    deploy:
+      replicas: 3
+
+  nginx-lb:
+    image: nginx:alpine3.23
+    container_name: nginx_lb
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - game-service
     networks:
       - backend_net
 

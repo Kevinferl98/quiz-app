@@ -1,8 +1,10 @@
 from fastapi import WebSocket
-import asyncio
+from redis import asyncio as aioredis
 from typing import Dict, List
 from app.services.redis_client import RedisClient
 import logging
+import asyncio
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +18,8 @@ class RoomManager:
         self.room_connections: Dict[str, List[WebSocket]] = {}
         self.lock = asyncio.Lock()
         self.quiz_tasks: Dict[str, asyncio.Task] = {}
+        self.redis_pubsub = aioredis.from_url("redis://redis:6379", decode_responses=True)
+        asyncio.create_task(self.listen_pubsub())
 
     async def connect(self, room_id: str, websocket: WebSocket):
         await websocket.accept()
@@ -37,7 +41,26 @@ class RoomManager:
 
                     logger.info(f"Room {room_id} cleaned up")
 
-    async def broadcast(self, room_id: str, message: dict):
+    async def listen_pubsub(self):
+        pubsub = self.redis_pubsub.pubsub()
+        await pubsub.psubscribe("room_*")
+        async for message in pubsub.listen():
+            if message["type"] == "pmessage":
+                channel = message["channel"]
+                room_id = channel.split("_")[1]
+                try:
+                    data = json.loads(message["data"])
+                    await self._broadcast_local(room_id, data)
+                except Exception as e:
+                    logger.warning(f"Error proceessing pubsub message: {e}")
+
+    async def publish(self, room_id: str, message: dict):
+        try:
+            await self.redis_pubsub.publish(f"room_{room_id}", json.dumps(message))
+        except Exception as e:
+            logger.warning(f"Error publishing message to room {room_id}: {e}")
+
+    async def _broadcast_local(self, room_id: str, message: dict):
         connections = self.room_connections.get(room_id, [])
         dead_connections = []
 
@@ -45,8 +68,7 @@ class RoomManager:
             try:
                 await ws.send_json(message)
             except Exception:
-                logger.warning("Removing dead websocket")
-                dead_connections.append(ws)
+                dead_connections.appened(ws)
 
         for ws in dead_connections:
             await self.disconnect(room_id, ws)
@@ -89,22 +111,18 @@ class RoomManager:
                     current_question_index=idx
                 )
 
-                await self.broadcast(room_id, {
+                await self.publish(room_id, {
                     "type": "question",
                     "question": question,
                     "index": idx
                 })
 
-                for t in range(QUESTION_DURATION, 0, -1):
-                    await self.broadcast(room_id, {
-                        "type": "timer",
-                        "seconds": t
-                    })
+                for _ in range(QUESTION_DURATION, 0, -1):
                     await asyncio.sleep(1)
 
                 answers = await redis_client.get_answers(room_id, idx)
                 
-                await self.broadcast(room_id, {
+                await self.publish(room_id, {
                     "type": "answer_result",
                     "correct_answer": question["correct_option"]
                 })
@@ -118,7 +136,7 @@ class RoomManager:
                 players = await redis_client.get_players(room_id)
                 leaderboard = [{"name": p["name"], "score": p["score"]} for p in players]
 
-                await self.broadcast(room_id, {
+                await self.publish(room_id, {
                     "type": "leaderboard",
                     "leaderboard": leaderboard,
                     "show_for": LEADERBOARD_DURATION
@@ -126,7 +144,7 @@ class RoomManager:
 
                 await asyncio.sleep(LEADERBOARD_DURATION)
 
-            await self.broadcast(room_id, {
+            await self.publish(room_id, {
                 "type": "end",
                 "leaderboard": leaderboard
             })
