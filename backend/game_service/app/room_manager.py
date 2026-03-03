@@ -1,8 +1,9 @@
 import logging
 import asyncio
 from fastapi import WebSocket
-from typing import Dict, List
+from typing import Dict, List, Optional
 from app.services.redis_client import RedisClient
+from contextlib import suppress
 
 logger = logging.getLogger(__name__)
 
@@ -10,79 +11,141 @@ QUESTION_DURATION = 15
 LEADERBOARD_DURATION = 3
 
 class RoomManager:
+    """
+    Manages:
+    - WebScocket connections per room
+    - Quiz lifecycle
+    - Redis pub/sub
+    """
+
     def __init__(self, redis_client: RedisClient):
-        self.redis_client = redis_client
-        self.room_connections: Dict[str, List[WebSocket]] = {}
-        self.lock = asyncio.Lock()
-        self.quiz_tasks: Dict[str, asyncio.Task] = {}
+        self._redis = redis_client
+        self._room_connections: Dict[str, List[WebSocket]] = {}
+        self._quiz_tasks: Dict[str, asyncio.Task] = {}
+
+        self._lock = asyncio.Lock()
+        self._subscribe_task: Optional[asyncio.Task] = None
+        self._running = False
+
+    async def start(self) -> None:
+        """Start background subscriptions."""
+        if self._running:
+            return
+        
+        self._running = True
         self._subscribe_task = asyncio.create_task(
-            self.redis_client.subscribe_rooms(self._broadcast_local)
+            self._redis.subscribe_rooms(self._broadcast_local)
         )
+        logger.info("RoomManager started")
 
-    async def connect(self, room_id: str, websocket: WebSocket):
+    async def stop(self) -> None:
+        """Stop all tasks"""
+        self._running = False
+
+        if self._subscribe_task:
+            self._subscribe_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._subscribe_task
+        
+        async with self._lock:
+            for task in self._quiz_tasks.values():
+                task.cancel()
+
+            for task in self._quiz_tasks.values():
+                with suppress(asyncio.CancelledError):
+                    await task
+
+            self._quiz_tasks.clear()
+
+        logger.info("RoomManager stopped")
+
+    async def connect(self, room_id: str, websocket: WebSocket) -> None:
         await websocket.accept()
-        async with self.lock:
-            self.room_connections.setdefault(room_id, []).append(websocket)
 
-    async def disconnect(self, room_id: str, websocket: WebSocket):
-        async with self.lock:
-            if room_id in self.room_connections:
-                if websocket in self.room_connections[room_id]:
-                    self.room_connections[room_id].remove(websocket)
+        async with self._lock:
+            self._room_connections.setdefault(room_id, []).append(websocket)
 
-                if not self.room_connections[room_id]:
-                    self.room_connections.pop(room_id, None)
+        logger.debug("WebSocket connected", extra={"roomn_id": room_id})
 
-                    task = self.quiz_tasks.pop(room_id, None)
-                    if task:
-                        task.cancel()
+    async def disconnect(self, room_id: str, websocket: WebSocket) -> None:
+        async with self._lock:
+            connections = self._room_connections.get(room_id)
+            if not connections:
+                return
+            
+            if websocket in connections:
+                connections.remove(websocket)
 
-                    logger.info(f"Room {room_id} cleaned up")
+            if not connections:
+                self._room_connections.pop(room_id, None)
+                await self._cleanup_room(room_id)
 
-    async def _broadcast_local(self, room_id: str, message: dict):
-        connections = self.room_connections.get(room_id, [])
-        dead_connections = []
+        logger.debug("WebSocket disconnected", extra={"room_id": room_id})
+
+    async def _cleanup_room(self, room_id: str) -> None:
+        """Cleanup room resources when empty"""
+        task = self._quiz_tasks.pop(room_id, None)
+        if task:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
+
+        logger.info("Room cleaned up", extra={"room_id": room_id})
+
+    async def _broadcast_local(self, room_id: str, message: dict) -> None:
+        async with self._lock:
+            connections = list(self._room_connections.get(room_id, []))
+
+        if not connections:
+            return
+        
+        dead: List[WebSocket] = []
 
         for ws in connections:
             try:
                 await ws.send_json(message)
             except Exception:
-                dead_connections.append(ws)
-
-        for ws in dead_connections:
+                dead.append(ws)
+        
+        for ws in dead:
             await self.disconnect(room_id, ws)
 
     async def start_quiz(self, room_id: str):
-        if room_id in self.quiz_tasks:
-            return
-
-        task = asyncio.create_task(self._run_quiz(room_id))
-        self.quiz_tasks[room_id] = task
+        async with self._lock:
+            if room_id in self._quiz_tasks:
+                logger.warning("Quiz already running", extra={"room_id": room_id})
+                return
+            
+            task = asyncio.create_task(self._run_quiz(room_id))
+            self._quiz_tasks[room_id] = task
 
     async def _run_quiz(self, room_id: str):
-        room_meta = await self.redis_client.get_room_meta(room_id)
-        if not room_meta:
-            logger.warning(f"Room {room_id} not found")
-            return
-        
-        await self.redis_client.save_room_meta(
-            room_id,
-            owner_id=room_meta["owner_id"],
-            quiz_id=room_meta["quiz_id"],
-            started=True,
-            current_question_index=0
-        )
-
-        leaderboard = []
-
-        questions = await self.redis_client.get_all_questions(room_id)
-        if not questions:
-            logger.warning(f"No questions for room {room_id}")
-            return
+        logger.info("Quiz started", extra={"room_id": room_id})
 
         try:
+            room_meta = await self._redis.get_room_meta(room_id)
+            if not room_meta:
+                logger.warning("Room not found", extra={"room_id": room_id})
+                return
+            
+            questions = await self._redis.get_all_questions(room_id)
+            if not questions:
+                logger.warning("No questions found", extra={"room_id": room_id})
+                return
+            
+            await self._redis.save_room_meta(
+                room_id,
+                owner_id=room_meta["owner_id"],
+                quiz_id=room_meta["quiz_id"],
+                started=True,
+                current_question_index=0
+            )
+
+            leaderboard = []
+
             for idx, question in enumerate(questions):
-                await self.redis_client.save_room_meta(
+
+                await self._redis.save_room_meta(
                     room_id,
                     owner_id=room_meta["owner_id"],
                     quiz_id=room_meta["quiz_id"],
@@ -90,52 +153,76 @@ class RoomManager:
                     current_question_index=idx
                 )
 
-                await self.redis_client.publish_room_message(room_id, {
-                    "type": "question",
-                    "question": question,
-                    "index": idx
-                })
+                await self._publish_question(room_id, question, idx)
 
-                for _ in range(QUESTION_DURATION, 0, -1):
-                    await asyncio.sleep(1)
+                await asyncio.sleep(QUESTION_DURATION)
 
-                answers = await self.redis_client.get_answers(room_id, idx)
-                
-                await self.redis_client.publish_room_message(room_id, {
-                    "type": "answer_result",
-                    "correct_answer": question["correct_option"]
-                })
-                
-                for pid, ans in answers.items():
-                    if ans == question["correct_option"]:
-                        await self.redis_client.increment_score(room_id, pid)
+                await self._process_answers(room_id, question, idx)
 
-                await self.redis_client.delete_answers(room_id, idx)
-
-                players = await self.redis_client.get_players(room_id)
-                leaderboard = [{"name": p["name"], "score": p["score"]} for p in players]
-
-                await self.redis_client.publish_room_message(room_id, {
-                    "type": "leaderboard",
-                    "leaderboard": leaderboard,
-                    "show_for": LEADERBOARD_DURATION
-                })
+                leaderboard = await self._publish_leaderboard(room_id)
 
                 await asyncio.sleep(LEADERBOARD_DURATION)
 
-            await self.redis_client.publish_room_message(room_id, {
-                "type": "end",
-                "leaderboard": leaderboard
-            })
-        except asyncio.CancelledError:
-            logger.info(f"Quiz cancelled for room {room_id}")
-
-        finally:
-            await self.redis_client.save_room_meta(
+            await self._redis.publish_room_message(
                 room_id,
-                owner_id=room_meta["owner_id"],
-                quiz_id=room_meta["quiz_id"],
-                started=False,
-                current_question_index=len(questions)
+                {"type": "end", "leaderboard": leaderboard}
             )
-            self.quiz_tasks.pop(room_id, None)
+        except asyncio.CancelledError:
+            logger.info("Quiz cancelled", extra={"room_id": room_id})
+            raise
+        except Exception:
+            logger.exception("Quiz crashed", extra={"room_id": room_id})
+        finally:
+            await self._reset_room_state(room_id)
+            async with self._lock:
+                self._quiz_tasks.pop(room_id, None)
+
+    async def _publish_question(self, room_id, question, idx):
+        await self._redis.publish_room_message(
+            room_id,
+            {"type": "question", "question": question, "index": idx}
+        )
+
+    async def _process_answers(self, room_id, question, idx):
+        answers = await self._redis.get_answers(room_id, idx)
+
+        await self._redis.publish_room_message(
+            room_id,
+            {"type": "answer_result", "correct_answer": question["correct_option"]}
+        )
+
+        for player_id, answer in answers.items():
+            if answer == question["correct_option"]:
+                await self._redis.increment_score(room_id, player_id)
+
+        await self._redis.delete_answers(room_id, idx)
+
+    async def _publish_leaderboard(self, room_id):
+        players = await self._redis.get_players(room_id)
+        leaderboard = [
+            {"name": p["name"], "score": p["score"]} for p in players
+        ]
+
+        await self._redis.publish_room_message(
+            room_id,
+            {
+                "type": "leaderboard",
+                "leaderboard": leaderboard,
+                "show_for": LEADERBOARD_DURATION,
+            },
+        )
+
+        return leaderboard
+    
+    async def _reset_room_state(self, room_id):
+        room_meta = await self._redis.get_room_meta(room_id)
+        if not room_meta:
+            return
+
+        await self._redis.save_room_meta(
+            room_id,
+            owner_id=room_meta["owner_id"],
+            quiz_id=room_meta["quiz_id"],
+            started=False,
+            current_question_index=0,
+        )
