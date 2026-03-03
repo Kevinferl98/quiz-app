@@ -4,12 +4,14 @@ import redis.asyncio as redis
 import json
 import json
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
 class RedisClient:
     def __init__(self):
         self.redis = redis.Redis.from_url(config.REDIS_URL, decode_responses=True)
+        self._locks: dict[str, str] = {}
 
     async def save_room_meta(self, room_id: str, owner_id: str, quiz_id: str, 
                              started: bool = False, current_question_index: int = 0, ttl_seconds: int = 3600):
@@ -121,3 +123,32 @@ class RedisClient:
                     await handler(room_id, data)
                 except Exception as e:
                     logger.warning(f"Error processing pubsub message: {e}")
+    
+    async def acquire_lock(self, key: str, ttl: int = 60) -> bool:
+        lock_value = str(uuid.uuid4())
+        acquired = await self.redis.set(key, lock_value, nx=True, ex=ttl)
+        if acquired:
+            self._locks[key] = lock_value
+            logger.debug(f"Lock acquired: {key}")
+            return True
+        return False
+    
+    async def release_lock(self, key: str) -> bool:
+        lock_value = self._locks.get(key)
+        if not lock_value:
+            logger.warning(f"Trying to release lock not owned: {key}")
+            return False
+        
+        lua = """
+        if redis.call("GET", KEYS[1]) == ARGV[1] then
+            return redis.call("DEL", KEYS[1])
+        else
+            return 0
+        end
+        """
+        result = await self.redis.eval(lua, keys=[key], args=[lock_value])
+        if result:
+            logger.debug(f"Lock released: {key}")
+            return True
+        logger.warning(f"Lock not released, value mismatch: {key}")
+        return False 

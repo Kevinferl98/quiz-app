@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 QUESTION_DURATION = 15
 LEADERBOARD_DURATION = 3
+QUIZ_LOCK_TTL = 60
 
 class RoomManager:
     """
@@ -111,15 +112,22 @@ class RoomManager:
             await self.disconnect(room_id, ws)
 
     async def start_quiz(self, room_id: str):
+
+        lock_key = f"quiz_lock:{room_id}"
+        acquired = await self._redis.acquire_lock(lock_key, QUIZ_LOCK_TTL)
+        if not acquired:
+            logger.warning("Quiz already running in another instance", extra={"room_id": room_id})
+
         async with self._lock:
             if room_id in self._quiz_tasks:
+                await self._redis.release_lock(lock_key)
                 logger.warning("Quiz already running", extra={"room_id": room_id})
                 return
             
-            task = asyncio.create_task(self._run_quiz(room_id))
+            task = asyncio.create_task(self._run_quiz(room_id, lock_key))
             self._quiz_tasks[room_id] = task
 
-    async def _run_quiz(self, room_id: str):
+    async def _run_quiz(self, room_id: str, lock_key: str) -> None:
         logger.info("Quiz started", extra={"room_id": room_id})
 
         try:
@@ -176,6 +184,7 @@ class RoomManager:
             await self._reset_room_state(room_id)
             async with self._lock:
                 self._quiz_tasks.pop(room_id, None)
+            await self._redis.release_lock(lock_key)
 
     async def _publish_question(self, room_id, question, idx):
         await self._redis.publish_room_message(
