@@ -2,48 +2,60 @@
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![AWS](https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)
 ![Terraform](https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white)
 
-A user-friendly web application that allows users to take quizzes, track their scores, and view results instantly. Administrators can easily add, or remove quizzes, making quiz management simple and efficient.
+A real-time multiplayer quiz platform where users can create, join, and compete in interactive challenges. Built with a distributed microservices architecture to handle persistent quiz data and low-latency game states.
 
+## Key features
+- **Multiplayer Rooms**: Join live sessions via WebSockets for a synchronized gaming experience.
+
+- **Solo Mode**: Practice quizzes individually at your own pace.
+
+- **Quiz Creator**: Registered users can design and save custom quizzes.
+
+- **Hybrid Auth**: Seamless access for both registered users and anonymous guests.
 
 ## Architecture Diagram
 <p align="center">
     <img src="docs/Architecture.jpg" alt="Architecture" width="80%"/>
 </p>
 
-## Architecture Overview
+The system is designed as a distributed set of services:
 
-This section explains the main components of the Quiz App and how they interact:
+**Quiz Service**: A Python (FastAPI) service that manages the lifecycle of quizzes (CRUD), persisting data in DynamoDB.
 
-- **Frontend (React, Vite):** Handles the user interface, quiz interactions, and communicates with the backend APIs. Uses **AWS Cognito** for secure user authentication.  
-- **Backend (FastAPI, Python):** Provides APIs for quiz management, admin operations, and quiz retrieval. Handles authentication and quiz listing/creation/deletion.  
-- **Database (DynamoDB):** Stores quizzes, questions, and user scores.  
-- **AWS Services:**  
-  - **Cognito:** Manages user login and authentication.  
-  - **S3:** Hosts the frontend application.  
-  - **ECS / EC2:** Hosts the backend application.  
-  - **ALB:** Distributes incoming requests to backend ECS/EC2 instances. 
-  - **Lambda:** Calculates, saves, and retrieves quiz scores.  
-- **Terraform:** Infrastructure as code to deploy and manage all AWS resources consistently.
+**Game Service**: The core engine for multiplayer logic. It handles WebSocket connections for real-time interaction and uses Redis Pub/Sub to synchronize state across multiple instances.
 
-## Features (Planned)
+**Identity Provider**: Keycloak (backed by PostgreSQL) manages user identity, ensuring secure access to the creator dashboard.
 
-- Take quizzes and view results
-- Track user scores
-- Serverless scoring with AWS Lambda  
-- Terraform provisioning for backend, Lambda, DynamoDB, and S3.
-
+**Load Balancer (NGINX)**: Orchestrates incoming traffic, distributing WebSocket and HTTP requests to the appropriate service instances.
 
 ## Tech Stack
 
-**Client:** JavaScript, React, Vite
+**Frontend:** React with TypeScript
 
-**Server:** Python, FastAPI, Docker
+**Backend:** Python & FastAPI for high-performance asynchronous endpoints.
 
-**AWS Services:** Cognito, ALB, ECS, EC2, ECR, Lambda, DynamoDB, S3
+**Inter-service Communication:** gRPC for efficient, low-latency communication between the Game and Quiz services.
 
-**Infrastructure as Code:** Terraform
+**Real-time:** WebSockets for bi-directional client-server communication.
 
+**DynamoDB**: Scalable NoSQL for quiz storage.
+
+**Redis**: In-memory store for game session state and real-time messaging.
+
+**PostgreSQL**: Relational storage for Keycloak identity data.
+
+## Technical Decisions
+**gRPC vs REST**: Using gRPC for internal service communication (Game Service → Quiz Service) allows to reduce overhead and benefit from strict Protobuf contract definition.
+
+**Redis for State Management**: Since game rooms are highly volatile, Redis provides the sub-millisecond latency required to track game status.
+
+**WebSocket Scaling**: NGINX acts as a reverse proxy to handle WebSocket upgrades and maintain persistent connections between the Client and the Game Service.
+
+**CI**: Automated pipeline via GitHub Actions that runs Linter and Unit Tests on every push, ensuring code quality and coverage for the backend.
+
+## Running the Application
