@@ -13,7 +13,9 @@ A user-friendly web application that allows users to take quizzes, track their s
 
 
 ## Architecture Diagram
-
+<p align="center">
+    <img src="docs/Architecture.jpg" alt="Architecture" width="80%"/>
+</p>
 
 ## Architecture Overview
 

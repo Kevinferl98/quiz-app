@@ -34,7 +34,7 @@ export default function RoomPage() {
         if (!room_id) return;
 
         const tokenQuery = authenticated && keycloak.token ? `?token=${keycloak.token}` : "";
-        const ws = new WebSocket(`ws://game-service:8002/ws/rooms/${room_id}${tokenQuery}`);
+        const ws = new WebSocket(`ws://nginx-lb:8082/ws/rooms/${room_id}${tokenQuery}`);
         wsRef.current = ws;
 
         ws.onopen = () => {
