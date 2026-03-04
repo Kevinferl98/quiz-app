@@ -2,7 +2,6 @@ from app.models.multiplayer import Player
 from app.config import config
 import redis.asyncio as redis
 import json
-import json
 import logging
 import uuid
 
