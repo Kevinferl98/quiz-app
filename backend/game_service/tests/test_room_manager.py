@@ -64,7 +64,7 @@ async def test_broadcast_local(room_manager):
 async def test_start_quiz_creates_task_and_acquires_lock(room_manager, redis_mock):
     await room_manager.start_quiz("room1")
     assert "room1" in room_manager._quiz_tasks
-    redis_mock.acquire_lock.assert_called_once_with(f"quiz_lock:room1", QUIZ_LOCK_TTL)
+    redis_mock.acquire_lock.assert_called_once_with("quiz_lock:room1", QUIZ_LOCK_TTL)
 
 @pytest.mark.asyncio
 async def test_start_quiz_prevents_duplicate_same_instance(room_manager, redis_mock):
