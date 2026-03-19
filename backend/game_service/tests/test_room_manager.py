@@ -6,24 +6,32 @@ from app.room_manager import RoomManager, QUIZ_LOCK_TTL
 @pytest.fixture
 def redis_mock():
     redis = AsyncMock()
-    redis.acquire_lock.return_value = True
-    redis.release_lock.return_value = True
-    redis.get_room_meta.return_value = {
+
+    redis.acquire_lock = AsyncMock(return_value=True)
+    redis.release_lock = AsyncMock(return_value=True)
+
+    redis.get_room_meta = AsyncMock(return_value={
         "owner_id": "owner1",
         "quiz_id": "quiz1",
         "started": False,
         "current_question_index": 0
-    }
-    redis.get_all_questions.return_value = [
+    })
+
+    redis.get_all_questions = AsyncMock(return_value=[
         {"question": "Q1", "correct_option": "A"},
         {"question": "Q2", "correct_option": "B"}
-    ]
-    redis.get_answers.return_value = {}
-    redis.get_players.return_value = [{"player_id": "p1", "name": "user", "score": 0}]
-    redis.publish_room_message.return_value = None
-    redis.save_room_meta.return_value = None
-    redis.increment_score.return_value = None
-    redis.delete_answers.return_value = None
+    ])
+
+    redis.get_answers = AsyncMock(return_value={})
+    redis.get_players = AsyncMock(return_value=[
+        {"player_id": "p1", "name": "user", "score": 0}
+    ])
+
+    redis.publish_room_message = AsyncMock()
+    redis.save_room_meta = AsyncMock()
+    redis.increment_score = AsyncMock()
+    redis.delete_answers = AsyncMock()
+
     return redis
 
 @pytest.fixture
@@ -39,12 +47,14 @@ def patch_durations():
 @pytest.mark.asyncio
 async def test_connect_disconnect(room_manager):
     ws = AsyncMock()
+
     await room_manager.connect("room1", ws)
     ws.accept.assert_awaited_once()
-    assert "room1" in room_manager._room_connections
+
     assert ws in room_manager._room_connections["room1"]
 
     await room_manager.disconnect("room1", ws)
+
     assert "room1" not in room_manager._room_connections
 
 @pytest.mark.asyncio
@@ -101,3 +111,88 @@ async def test_cleanup_room_cancels_task(room_manager, redis_mock):
 
     assert "room1" not in room_manager._quiz_tasks
     assert task.cancelled() or task.done()
+
+@pytest.mark.asyncio
+async def test_broadcast_removes_dead_connections(room_manager):
+    ws_ok = AsyncMock()
+    ws_fail = AsyncMock()
+    ws_fail.send_json.side_effect = Exception()
+
+    await room_manager.connect("room1", ws_ok)
+    await room_manager.connect("room1", ws_fail)
+
+    await room_manager._broadcast_local("room1", {"msg": "test"})
+
+    ws_ok.send_json.assert_awaited_once()
+
+    assert ws_fail not in room_manager._room_connections.get("room1", [])
+
+@pytest.mark.asyncio
+async def test_start_and_stop(room_manager, redis_mock):
+    redis_mock.subscribe_rooms = AsyncMock()
+
+    await room_manager.start()
+    assert room_manager._running is True
+    assert room_manager._subscribe_task is not None
+
+    await room_manager.stop()
+    assert room_manager._running is False
+
+@pytest.mark.asyncio
+async def test_start_quiz_lock_not_acquired(room_manager, redis_mock):
+    redis_mock.acquire_lock.return_value = False
+
+    await room_manager.start_quiz("room1")
+
+    assert "room1" in room_manager._quiz_tasks
+
+@pytest.mark.asyncio
+async def test_process_answers_assigns_points(room_manager, redis_mock):
+    redis_mock.get_answers.return_value = {
+        "p1": "A",
+        "p2": "B"
+    }
+
+    question = {"correct_option": "A"}
+
+    await room_manager._process_answers("room1", question, 0)
+
+    redis_mock.increment_score.assert_called_once_with("room1", "p1")
+    redis_mock.delete_answers.assert_called_once_with("room1", 0)
+
+@pytest.mark.asyncio
+async def test_publish_leaderboard(room_manager, redis_mock):
+    leaderboard = await room_manager._publish_leaderboard("room1")
+
+    assert leaderboard == [{"name": "user", "score": 0}]
+    redis_mock.publish_room_message.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_reset_room_state(room_manager, redis_mock):
+    await room_manager._reset_room_state("room1")
+
+    redis_mock.save_room_meta.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_reset_room_state_no_room(room_manager, redis_mock):
+    redis_mock.get_room_meta.return_value = None
+
+    await room_manager._reset_room_state("room1")
+
+    redis_mock.save_room_meta.assert_not_called()
+
+@pytest.mark.asyncio
+async def test_run_quiz_no_room(room_manager, redis_mock):
+    redis_mock.get_room_meta.return_value = None
+
+    await room_manager._run_quiz("room1", "lock")
+
+    redis_mock.publish_room_message.assert_not_called()
+
+@pytest.mark.asyncio
+async def test_run_quiz_no_questions(room_manager, redis_mock):
+    redis_mock.get_all_questions.return_value = None
+
+    await room_manager._run_quiz("room1", "lock")
+
+    redis_mock.publish_room_message.assert_not_called()
