@@ -4,6 +4,7 @@ import redis.asyncio as redis
 import json
 import logging
 import uuid
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -85,10 +86,23 @@ class RedisClient:
         return players
     
     async def save_answer(self, room_id: str, question_index: int, player_id: str, answer: str):
-        await self.redis.hset(f"room:{room_id}:answers:{question_index}", player_id, answer)
+        await self.redis.hset(
+            f"room:{room_id}:answers:{question_index}",
+            player_id, 
+            json.dumps({
+                "answer": answer,
+                "ts": time.time()
+            })
+        )
 
     async def get_answers(self, room_id: str, question_index: int):
-        return await self.redis.hgetall(f"room:{room_id}:answers:{question_index}")
+        raw =  await self.redis.hgetall(f"room:{room_id}:answers:{question_index}")
+
+        parsed = {}
+        for pid, data in raw.items():
+            parsed[pid] = json.loads(data)
+
+        return parsed
 
     async def delete_answers(self, room_id: str, question_index: int):
         await self.redis.delete(f"room:{room_id}:answers:{question_index}")
@@ -151,3 +165,16 @@ class RedisClient:
             return True
         logger.warning(f"Lock not released, value mismatch: {key}")
         return False 
+    
+    async def set_question_start(self, room_id: str, ttl: int):
+        await self.redis.set(
+            f"room:{room_id}:question_start",
+            time.time(),
+            ex=ttl
+        )
+
+    async def get_question_start(self, room_id: str) -> float | None:
+        value = await self.redis.get(f"room:{room_id}:question_start")
+        if value is None:
+            return None
+        return float(value)

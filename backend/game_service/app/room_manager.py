@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import time
 from fastapi import WebSocket
 from typing import Dict, List, Optional
 from app.services.redis_client import RedisClient
@@ -149,8 +150,6 @@ class RoomManager:
                 current_question_index=0
             )
 
-            leaderboard = []
-
             for idx, question in enumerate(questions):
 
                 is_last = idx == len(questions) - 1
@@ -190,17 +189,35 @@ class RoomManager:
             {"type": "question", "question": question, "index": idx}
         )
 
+        await self._redis.set_question_start(room_id, QUESTION_DURATION + 5)
+
     async def _process_answers(self, room_id, question, idx):
         answers = await self._redis.get_answers(room_id, idx)
+
+        start_time = await self._redis.get_question_start(room_id)
+        if start_time is None:
+            start_time = time.time()
 
         await self._redis.publish_room_message(
             room_id,
             {"type": "answer_result", "correct_answer": question["correct_option"]}
         )
 
-        for player_id, answer in answers.items():
+        for player_id, data in answers.items():
+            answer = data["answer"]
+            ts = data["ts"]
+
             if answer == question["correct_option"]:
-                await self._redis.increment_score(room_id, player_id)
+                response_time = ts - start_time
+                time_ratio = min(response_time / QUESTION_DURATION, 1)
+
+                max_points = 1000
+                min_points = 200
+
+                points = int(max_points * (1 - time_ratio))
+                points = max(points, min_points)
+
+                await self._redis.increment_score(room_id, player_id, points)
 
         await self._redis.delete_answers(room_id, idx)
 
