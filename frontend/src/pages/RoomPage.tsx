@@ -31,6 +31,7 @@ export default function RoomPage() {
     const [correctAnswer, setCorrectAnswer] = useState<string | null>(null);
 
     const [isFinalLeaderboard, setIsFinalLeaderboard] = useState(false);
+    const [totalTime, setTotalTime] = useState<number>(15);
 
     const connectWebSocket = (playerId: string, username?: string) => {
         if (!room_id) return;
@@ -66,7 +67,11 @@ export default function RoomPage() {
                     setLeaderboard([]);
                     setSelectedAnswer(null);
                     setCorrectAnswer(null);
-                    setTimer(data.question.duration || 15);
+
+                    const duration = data.question.duration || 15;
+                    setTimer(duration);
+                    setTotalTime(duration);
+
                     break;
                 case "timer":
                     setTimer(data.seconds);
@@ -140,6 +145,9 @@ export default function RoomPage() {
         wsRef.current?.send(JSON.stringify({ type: "answer", answer }));
     };
 
+    const progress = (timer / totalTime) * 100;
+    const isCritical = timer <= 5;
+
     if (!authenticated && !nameSubmitted) {
         return (
             <div className="room-container">
@@ -200,7 +208,10 @@ export default function RoomPage() {
                 <div className="question-box">
                     <div className="question-header">
                         <h2 className="question-text">{question.question_text}</h2>
-                        <div className="timer-box">{timer}s</div>
+                    </div>
+                    <div className="timer-container">
+                        <div className="timer-bar" style={{ width: `${progress}%` }}/>
+                        <div className="timer-text">{timer}s</div>
                     </div>
                     
                     <div className="options">
