@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.services import quiz_service
 from app.auth import get_current_user
-from app.models.quiz import (
+from app.schemas.quiz import (
     AnswerResponse, AnswerRequest, QuizzesResponse,
     QuizCreateRequest, QuizCreateResponse, QuizDeleteResponse, QuizOut, QuizDetailResponse,
     QuestionOut
