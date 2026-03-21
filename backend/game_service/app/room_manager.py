@@ -8,7 +8,7 @@ from contextlib import suppress
 logger = logging.getLogger(__name__)
 
 QUESTION_DURATION = 15
-LEADERBOARD_DURATION = 3
+LEADERBOARD_DURATION = 8
 QUIZ_LOCK_TTL = 60
 
 class RoomManager:
@@ -153,6 +153,8 @@ class RoomManager:
 
             for idx, question in enumerate(questions):
 
+                is_last = idx == len(questions) - 1
+
                 await self._redis.save_room_meta(
                     room_id,
                     owner_id=room_meta["owner_id"],
@@ -167,14 +169,10 @@ class RoomManager:
 
                 await self._process_answers(room_id, question, idx)
 
-                leaderboard = await self._publish_leaderboard(room_id)
+                await self._publish_leaderboard(room_id, final=is_last)
 
-                await asyncio.sleep(LEADERBOARD_DURATION)
-
-            await self._redis.publish_room_message(
-                room_id,
-                {"type": "end", "leaderboard": leaderboard}
-            )
+                if not is_last:
+                    await asyncio.sleep(LEADERBOARD_DURATION)
         except asyncio.CancelledError:
             logger.info("Quiz cancelled", extra={"room_id": room_id})
             raise
@@ -206,16 +204,21 @@ class RoomManager:
 
         await self._redis.delete_answers(room_id, idx)
 
-    async def _publish_leaderboard(self, room_id):
+    async def _publish_leaderboard(self, room_id, final=False):
         players = await self._redis.get_players(room_id)
+
+        players_sorted = sorted(players, key=lambda p: p["score"], reverse=True)
+
         leaderboard = [
-            {"name": p["name"], "score": p["score"]} for p in players
+            {"name": p["name"], "score": p["score"]} 
+            for p in players_sorted[:5]
         ]
 
         await self._redis.publish_room_message(
             room_id,
             {
                 "type": "leaderboard",
+                "final": final,
                 "leaderboard": leaderboard,
                 "show_for": LEADERBOARD_DURATION,
             },
