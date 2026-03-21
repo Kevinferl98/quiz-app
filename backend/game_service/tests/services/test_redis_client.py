@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from app.services.redis_client import RedisClient
-from app.models.multiplayer import Player
+from app.schemas.multiplayer import Player
 
 @pytest.fixture
 def redis_client():

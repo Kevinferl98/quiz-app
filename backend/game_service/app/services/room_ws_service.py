@@ -1,6 +1,6 @@
 import uuid
 from fastapi import WebSocket
-from app.models.multiplayer import Player
+from app.schemas.multiplayer import Player
 from app.auth import get_current_user
 from app.domain.room_session import RoomSession
 
