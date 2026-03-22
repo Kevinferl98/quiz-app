@@ -149,15 +149,18 @@ async def test_start_quiz_lock_not_acquired(room_manager, redis_mock):
 @pytest.mark.asyncio
 async def test_process_answers_assigns_points(room_manager, redis_mock):
     redis_mock.get_answers.return_value = {
-        "p1": "A",
-        "p2": "B"
+        "p1": {"answer": "A", "ts": 1234567890.0},
+        "p2": {"answer": "B", "ts": 1234567891.0}
     }
+
+    redis_mock.get_question_start.return_value = 1234567880.0
 
     question = {"correct_option": "A"}
 
-    await room_manager._process_answers("room1", question, 0)
+    with patch("app.room_manager.QUESTION_DURATION", 15):
+        await room_manager._process_answers("room1", question, 0)
 
-    redis_mock.increment_score.assert_called_once_with("room1", "p1")
+    redis_mock.increment_score.assert_called_once_with("room1", "p1", 333)
     redis_mock.delete_answers.assert_called_once_with("room1", 0)
 
 @pytest.mark.asyncio
