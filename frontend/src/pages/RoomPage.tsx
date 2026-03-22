@@ -30,6 +30,9 @@ export default function RoomPage() {
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
     const [correctAnswer, setCorrectAnswer] = useState<string | null>(null);
 
+    const [isFinalLeaderboard, setIsFinalLeaderboard] = useState(false);
+    const [totalTime, setTotalTime] = useState<number>(15);
+
     const connectWebSocket = (playerId: string, username?: string) => {
         if (!room_id) return;
 
@@ -64,7 +67,11 @@ export default function RoomPage() {
                     setLeaderboard([]);
                     setSelectedAnswer(null);
                     setCorrectAnswer(null);
-                    setTimer(data.question.duration || 15);
+
+                    const duration = data.question.duration || 15;
+                    setTimer(duration);
+                    setTotalTime(duration);
+
                     break;
                 case "timer":
                     setTimer(data.seconds);
@@ -73,11 +80,9 @@ export default function RoomPage() {
                     setCorrectAnswer(data.correct_answer);
                     break;
                 case "leaderboard":
+                    setQuestion(null);
                     setLeaderboard(data.leaderboard);
-                    break;
-                case "end":
-                    setLeaderboard(data.leaderboard);
-                    setGameEnded(true);
+                    setIsFinalLeaderboard(!!data.final)
                     break;
                 case "error":
                     alert(data.message);
@@ -116,6 +121,12 @@ export default function RoomPage() {
         }
     }, [authenticated, room_id]);
 
+    useEffect(() => {
+        if (isFinalLeaderboard) {
+            setGameEnded(true);
+        }
+    }, [isFinalLeaderboard]);
+
     const handleSubmitName = () => {
         if (!nameInput.trim()) return;
         const uuid = crypto.randomUUID();
@@ -133,6 +144,9 @@ export default function RoomPage() {
         setSelectedAnswer(answer);
         wsRef.current?.send(JSON.stringify({ type: "answer", answer }));
     };
+
+    const progress = (timer / totalTime) * 100;
+    const isCritical = timer <= 5;
 
     if (!authenticated && !nameSubmitted) {
         return (
@@ -194,7 +208,10 @@ export default function RoomPage() {
                 <div className="question-box">
                     <div className="question-header">
                         <h2 className="question-text">{question.question_text}</h2>
-                        <div className="timer-box">{timer}s</div>
+                    </div>
+                    <div className="timer-container">
+                        <div className="timer-bar" style={{ width: `${progress}%` }}/>
+                        <div className="timer-text">{timer}s</div>
                     </div>
                     
                     <div className="options">
@@ -222,13 +239,40 @@ export default function RoomPage() {
 
             {leaderboard.length > 0 && (
                 <div className="leaderboard-box">
-                    <h2 className="leaderboard-title">Leaderboard</h2>
-                    <div className="leaderboard-grid">
-                        {leaderboard.map((entry, i) => (
-                            <div key={i} className="leaderboard-card">
-                                <span className="leaderboard-rank">{i+1}</span>
-                                <span className="leaderboard-name">{entry.name}</span>
-                                <span className="leaderboard-score">{entry.score}</span>
+                    <h2 className="leaderboard-title">
+                        {isFinalLeaderboard ? "Final Results" : "Leaderboard"}
+                    </h2>
+
+                    {/* PODIUM */}
+                    <div className="podium">
+                        {leaderboard[1] && (
+                            <div className="podium-item second">
+                                <div className="podium-name">{leaderboard[1].name}</div>
+                                <div className="podium-score">{leaderboard[1].score}</div>
+                            </div>
+                        )}
+
+                        {leaderboard[0] && (
+                            <div className="podium-item first">
+                                <div className="podium-name">{leaderboard[0].name}</div>
+                                <div className="podium-score">{leaderboard[0].score}</div>
+                            </div>
+                        )}
+
+                        {leaderboard[2] && (
+                            <div className="podium-item third">
+                                <div className="podium-name">{leaderboard[2].name}</div>
+                                <div className="podium-score">{leaderboard[2].score}</div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="leaderboard-list">
+                        {leaderboard.slice(3).map((entry, i) => (
+                            <div key={i} className="leaderboard-row">
+                                <span>#{i + 4}</span>
+                                <span>{entry.name}</span>
+                                <span>{entry.score}</span>
                             </div>
                         ))}
                     </div>

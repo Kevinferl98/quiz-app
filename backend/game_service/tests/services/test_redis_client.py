@@ -1,5 +1,6 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+import json
+from unittest.mock import AsyncMock, MagicMock, patch
 from app.services.redis_client import RedisClient
 from app.schemas.multiplayer import Player
 
@@ -81,19 +82,6 @@ async def test_player_management(redis_client):
     redis_client.redis.srem.assert_called_once()
     redis_client.redis.delete.assert_called_with("room:123:player:p1")
 
-
-@pytest.mark.asyncio
-async def test_answers_flow(redis_client):
-    await redis_client.save_answer("123", 0, "p1", "ans")
-    redis_client.redis.hset.assert_called_with("room:123:answers:0", "p1", "ans")
-
-    redis_client.redis.hgetall.return_value = {"p1": "ans"}
-    ans = await redis_client.get_answers("123", 0)
-    assert ans == {"p1": "ans"}
-
-    await redis_client.delete_answers("123", 0)
-    redis_client.redis.delete.assert_called_with("room:123:answers:0")
-
 @pytest.mark.asyncio
 async def test_increment_and_counter(redis_client):
     await redis_client.increment_score("123", "p1", 3)
@@ -138,3 +126,88 @@ async def test_locks(redis_client):
     redis_client._locks.pop("key1")
     released = await redis_client.release_lock("key1")
     assert released is False
+
+@pytest.mark.asyncio
+async def test_save_answer(redis_client):
+    room_id = "room123"
+    q_index = 0
+    player_id = "player_1"
+    answer = "A"
+    
+    fixed_time = 1711000000.0
+    with patch("time.time", return_value=fixed_time):
+        await redis_client.save_answer(room_id, q_index, player_id, answer)
+    
+    expected_key = f"room:{room_id}:answers:{q_index}"
+    expected_value = json.dumps({
+        "answer": answer,
+        "ts": fixed_time
+    })
+    
+    redis_client.redis.hset.assert_called_once_with(
+        expected_key,
+        player_id,
+        expected_value
+    )
+
+@pytest.mark.asyncio
+async def test_get_answers_success(redis_client):
+    room_id = "room123"
+    q_index = 0
+    
+    mock_data = {
+        "p1": json.dumps({"answer": "A", "ts": 100.0}),
+        "p2": json.dumps({"answer": "B", "ts": 101.5})
+    }
+    redis_client.redis.hgetall.return_value = mock_data
+    
+    result = await redis_client.get_answers(room_id, q_index)
+    
+    assert len(result) == 2
+    assert result["p1"]["answer"] == "A"
+    assert isinstance(result["p2"]["ts"], float)
+    assert result["p2"]["ts"] == 101.5
+    redis_client.redis.hgetall.assert_called_once_with(f"room:{room_id}:answers:{q_index}")
+
+@pytest.mark.asyncio
+async def test_get_answers_empty(redis_client):
+    redis_client.redis.hgetall.return_value = {}
+    
+    result = await redis_client.get_answers("room123", 0)
+    
+    assert result == {}
+    assert isinstance(result, dict)
+
+@pytest.mark.asyncio
+async def test_set_question_start(redis_client):
+    room_id = "room123"
+    ttl = 30
+    fixed_time = 1711000000.0
+    
+    with patch("time.time", return_value=fixed_time):
+        await redis_client.set_question_start(room_id, ttl)
+    
+    redis_client.redis.set.assert_called_once_with(
+        f"room:{room_id}:question_start",
+        fixed_time,
+        ex=ttl
+    )
+
+@pytest.mark.asyncio
+async def test_get_question_start_found(redis_client):
+    room_id = "room123"
+    redis_client.redis.get.return_value = "1711000000.0"
+    
+    result = await redis_client.get_question_start(room_id)
+    
+    assert isinstance(result, float)
+    assert result == 1711000000.0
+    redis_client.redis.get.assert_called_once_with(f"room:{room_id}:question_start")
+
+@pytest.mark.asyncio
+async def test_get_question_start_none(redis_client):
+    redis_client.redis.get.return_value = None
+    
+    result = await redis_client.get_question_start("room123")
+    
+    assert result is None
