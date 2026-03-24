@@ -1,10 +1,34 @@
+import random
 from app.services.redis_client import RedisClient
+
+CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+ROOM_TTL_SECONDS = 3600
+MAX_RETRIES = 5
 
 ROOM_COUNTER_KEY = "global_room_counter"
 
+def generate_room_code(length: int = 5) -> str:
+    return "".join(random.choices(CHARS, k=length))
+
+async def reserve_room_id(redis: RedisClient, room_id: str, ttl: int) -> bool:
+    return await redis.set_if_not_exists(
+        key=f"room:{room_id}:lock",
+        value="1",
+        ttl=ttl
+    )
+
+async def generate_unique_room_id(redis: RedisClient) -> str:
+    for _ in range(MAX_RETRIES):
+        room_id = generate_room_code()
+
+        reserved = await reserve_room_id(redis, room_id, ttl=ROOM_TTL_SECONDS)
+        if reserved:
+            return room_id
+
+    raise RuntimeError("Unable to generate a unique room_id after multiple attempts")
+
 async def create_room(redis: RedisClient, quiz_id: str, user_id: str, quiz_data: dict) -> dict:
-    room_number = await redis.incr_counter(ROOM_COUNTER_KEY)
-    room_id = f"{room_number:05d}"
+    room_id = await generate_unique_room_id(redis)
 
     await redis.save_room_meta(
         room_id=room_id,
@@ -12,13 +36,13 @@ async def create_room(redis: RedisClient, quiz_id: str, user_id: str, quiz_data:
         quiz_id=quiz_id,
         started=False,
         current_question_index=0,
-        ttl_seconds=3600
+        ttl_seconds=ROOM_TTL_SECONDS
     )
 
     await redis.save_questions(
         room_id=room_id,
         questions=quiz_data.get("questions", []),
-        ttl_seconds=3600
+        ttl_seconds=ROOM_TTL_SECONDS
     )
 
     return {"room_id": room_id}

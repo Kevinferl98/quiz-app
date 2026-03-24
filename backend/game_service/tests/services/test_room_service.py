@@ -1,11 +1,11 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
-from app.services.room_service import create_room, ROOM_COUNTER_KEY
+from unittest.mock import AsyncMock, MagicMock, patch
+from app.services.room_service import create_room
 
 @pytest.fixture
 def mock_redis():
     redis = MagicMock()
-    redis.incr_counter = AsyncMock(return_value=42)
+    redis.set_if_not_exists = AsyncMock(return_value=True)
     redis.save_room_meta = AsyncMock()
     redis.save_questions = AsyncMock()
     return redis
@@ -16,19 +16,24 @@ async def test_create_room_success(mock_redis):
         "questions": [{"q": "test"}]
     }
 
-    result = await create_room(
-        redis=mock_redis,
-        quiz_id="quiz1",
-        user_id="user1",
-        quiz_data=quiz_data
+    with patch("app.services.room_service.generate_room_code", return_value="ABCDE"):
+        result = await create_room(
+            redis=mock_redis,
+            quiz_id="quiz1",
+            user_id="user1",
+            quiz_data=quiz_data
+        )
+
+    mock_redis.set_if_not_exists.assert_called_once_with(
+        key="room:ABCDE:lock",
+        value="1",
+        ttl=3600
     )
 
-    mock_redis.incr_counter.assert_called_once_with(ROOM_COUNTER_KEY)
-
-    assert result["room_id"] == "00042"
+    assert result["room_id"] == "ABCDE"
 
     mock_redis.save_room_meta.assert_called_once_with(
-        room_id="00042",
+        room_id="ABCDE",
         owner_id="user1",
         quiz_id="quiz1",
         started=False,
@@ -37,7 +42,7 @@ async def test_create_room_success(mock_redis):
     )
 
     mock_redis.save_questions.assert_called_once_with(
-        room_id="00042",
+        room_id="ABCDE",
         questions=[{"q": "test"}],
         ttl_seconds=3600
     )
@@ -46,30 +51,32 @@ async def test_create_room_success(mock_redis):
 async def test_create_room_without_questions(mock_redis):
     quiz_data = {}
 
-    result = await create_room(
-        redis=mock_redis,
-        quiz_id="quiz1",
-        user_id="user1",
-        quiz_data=quiz_data
-    )
+    with patch("app.services.room_service.generate_room_code", return_value="ABCDE"):
+        result = await create_room(
+            redis=mock_redis,
+            quiz_id="quiz1",
+            user_id="user1",
+            quiz_data=quiz_data
+        )
 
     mock_redis.save_questions.assert_called_once_with(
-        room_id="00042",
+        room_id="ABCDE",
         questions=[],
         ttl_seconds=3600
     )
 
-    assert result["room_id"] == "00042"
+    assert result["room_id"] == "ABCDE"
 
 @pytest.mark.asyncio
 async def test_all_redis_methods_are_called(mock_redis):
-    await create_room(
-        redis=mock_redis,
-        quiz_id="quiz1",
-        user_id="user1",
-        quiz_data={}
-    )
+    with patch("app.services.room_service.generate_room_code", return_value="ABCDE"):
+        await create_room(
+            redis=mock_redis,
+            quiz_id="quiz1",
+            user_id="user1",
+            quiz_data={}
+        )
 
-    assert mock_redis.incr_counter.await_count == 1
+    assert mock_redis.set_if_not_exists.await_count == 1
     assert mock_redis.save_room_meta.await_count == 1
     assert mock_redis.save_questions.await_count == 1
