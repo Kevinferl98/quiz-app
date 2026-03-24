@@ -109,9 +109,6 @@ class RedisClient:
 
     async def increment_score(self, room_id: str, player_id: str, points: int = 1):
         await self.redis.hincrby(f"room:{room_id}:player:{player_id}", "score", points)
-
-    async def incr_counter(self, key: str) -> int:
-        return await self.redis.incr(key)
     
     async def publish_room_message(self, room_id: str, message: dict):
         try:
@@ -178,3 +175,6 @@ class RedisClient:
         if value is None:
             return None
         return float(value)
+
+    async def set_if_not_exists(self, key: str, value: str, ttl: int) -> bool:
+        return await self.redis.set(key, value, ex=ttl, nx=True)

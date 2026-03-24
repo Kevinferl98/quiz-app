@@ -83,13 +83,9 @@ async def test_player_management(redis_client):
     redis_client.redis.delete.assert_called_with("room:123:player:p1")
 
 @pytest.mark.asyncio
-async def test_increment_and_counter(redis_client):
+async def test_increment(redis_client):
     await redis_client.increment_score("123", "p1", 3)
     redis_client.redis.hincrby.assert_called_once_with("room:123:player:p1", "score", 3)
-
-    redis_client.redis.incr.return_value = 10
-    val = await redis_client.incr_counter("key1")
-    assert val == 10
 
 @pytest.mark.asyncio
 async def test_publish_room_message(redis_client):
