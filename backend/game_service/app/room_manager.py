@@ -12,6 +12,7 @@ QUESTION_DURATION = 15
 LEADERBOARD_DURATION = 8
 QUIZ_LOCK_TTL = 60
 ANSWER_REVEAL_DURATION = 4
+SLEEP_DURATION = 0.3
 
 class RoomManager:
     """
@@ -165,7 +166,7 @@ class RoomManager:
 
                 await self._publish_question(room_id, question, idx)
 
-                await asyncio.sleep(QUESTION_DURATION)
+                await self._wait_for_answers_or_timeout(room_id, idx)
 
                 await self._process_answers(room_id, question, idx)
 
@@ -258,3 +259,21 @@ class RoomManager:
             started=False,
             current_question_index=0,
         )
+
+    async def _wait_for_answers_or_timeout(self, room_id, idx):
+        start = time.time()
+
+        while True:
+            elapsed = time.time() - start
+
+            if elapsed >= QUESTION_DURATION:
+                return
+
+            answers_count = await self._redis.count_answers(room_id, idx)
+            players = await self._redis.get_players(room_id)
+
+            if players and answers_count >= len(players):
+                logger.info("All players answered early", extra={"room_id": room_id})
+                return
+
+            await asyncio.sleep(SLEEP_DURATION)
