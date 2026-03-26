@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 QUESTION_DURATION = 15
 LEADERBOARD_DURATION = 8
 QUIZ_LOCK_TTL = 60
+ANSWER_REVEAL_DURATION = 4
 
 class RoomManager:
     """
@@ -167,6 +168,8 @@ class RoomManager:
                 await asyncio.sleep(QUESTION_DURATION)
 
                 await self._process_answers(room_id, question, idx)
+
+                await asyncio.sleep(ANSWER_REVEAL_DURATION)
 
                 await self._publish_leaderboard(room_id, final=is_last)
 

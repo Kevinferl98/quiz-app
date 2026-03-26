@@ -41,7 +41,8 @@ def room_manager(redis_mock):
 @pytest.fixture(autouse=True)
 def patch_durations():
     with patch("app.room_manager.QUESTION_DURATION", 0), \
-         patch("app.room_manager.LEADERBOARD_DURATION", 0):
+         patch("app.room_manager.LEADERBOARD_DURATION", 0), \
+         patch("app.room_manager.ANSWER_REVEAL_DURATION", 0):
         yield
 
 @pytest.mark.asyncio
