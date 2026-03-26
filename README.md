@@ -56,5 +56,3 @@ The system is designed as a distributed set of services:
 **WebSocket Scaling**: NGINX acts as a reverse proxy to handle WebSocket upgrades and maintain persistent connections between the Client and the Game Service.
 
 **CI**: Automated pipeline via GitHub Actions that runs Linter and Unit Tests on every push, ensuring code quality and coverage for the backend.
-
-## Running the Application
