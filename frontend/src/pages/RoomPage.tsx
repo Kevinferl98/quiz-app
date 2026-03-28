@@ -33,6 +33,8 @@ export default function RoomPage() {
     const [isFinalLeaderboard, setIsFinalLeaderboard] = useState(false);
     const [totalTime, setTotalTime] = useState<number>(15);
 
+    const [redirect, setRedirect] = useState<string | null>(null);
+
     const connectWebSocket = (playerId: string, username?: string) => {
         if (!room_id) return;
 
@@ -85,7 +87,15 @@ export default function RoomPage() {
                     setIsFinalLeaderboard(!!data.final)
                     break;
                 case "error":
-                    alert(data.message);
+                    switch(data.code) {
+                        case "ROOM_NOT_FOUND":
+                        case "ROOM_ALREADY_STARTED":
+                            alert(data.message);
+                            setRedirect("/");
+                            break;
+                        default:
+                            alert(data.message);
+                    }
                     break;
             }
         };
@@ -126,6 +136,12 @@ export default function RoomPage() {
             setGameEnded(true);
         }
     }, [isFinalLeaderboard]);
+
+    useEffect(() => {
+        if (redirect) {
+            navigate(redirect);
+        }
+    }, [redirect, navigate]);
 
     const handleSubmitName = () => {
         if (!nameInput.trim()) return;
