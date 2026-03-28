@@ -1,8 +1,11 @@
 import uuid
+import logging
 from fastapi import WebSocket
 from app.schemas.multiplayer import Player
 from app.auth import get_current_user
 from app.domain.room_session import RoomSession
+
+logger = logging.getLogger(__name__)
 
 class RoomWebSocketService:
     def __init__(self, manager, redis):
@@ -13,6 +16,8 @@ class RoomWebSocketService:
         await self.manager.connect(room_id, websocket)
 
         session = await self._initialize_session(websocket, room_id)
+
+        await self.manager.register_player_ws(websocket, session.player_id)
 
         await self._event_loop(websocket, room_id, session)
 
@@ -54,21 +59,26 @@ class RoomWebSocketService:
         return session
 
     async def _event_loop(self, websocket: WebSocket, room_id: str, session: RoomSession):
-        while True:
-            data = await websocket.receive_json()
-            action = data.get("type")
+        try:
+            async for data in websocket.iter_json():
+                action = data.get("type")
 
-            if action == "join":
-                await self._handle_join(websocket, room_id, session, data)
-            elif action == "start":
-                await self._handle_start(websocket, room_id, session)
-            elif action == "answer":
-                await self._handle_answer(room_id, session, data)
-            else:
-                await websocket.send_json({
-                    "type": "error",
-                    "message": "unknown action"
-                })
+                if action == "join":
+                    await self._handle_join(websocket, room_id, session, data)
+                elif action == "start":
+                    await self._handle_start(websocket, room_id, session)
+                elif action == "answer":
+                    await self._handle_answer(room_id, session, data)
+                else:
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": "unknown action"
+                    })
+
+        except Exception as e:
+            logger.exception("Error in WebSocket loop", exc_info=e)
+        finally:
+            await self.handle_disconnect(websocket, room_id)
     
     async def handle_disconnect(self, websocket: WebSocket, room_id: str):
         await self.manager.disconnect(room_id, websocket)

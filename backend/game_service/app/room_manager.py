@@ -26,6 +26,7 @@ class RoomManager:
         self._redis = redis_client
         self._room_connections: Dict[str, List[WebSocket]] = {}
         self._quiz_tasks: Dict[str, asyncio.Task] = {}
+        self._ws_to_player: Dict[WebSocket, str] = {}
 
         self._lock = asyncio.Lock()
         self._subscribe_task: Optional[asyncio.Task] = None
@@ -69,7 +70,7 @@ class RoomManager:
         async with self._lock:
             self._room_connections.setdefault(room_id, []).append(websocket)
 
-        logger.debug("WebSocket connected", extra={"roomn_id": room_id})
+        logger.debug("WebSocket connected", extra={"room_id": room_id})
 
     async def disconnect(self, room_id: str, websocket: WebSocket) -> None:
         async with self._lock:
@@ -80,9 +81,23 @@ class RoomManager:
             if websocket in connections:
                 connections.remove(websocket)
 
+            player_id = self._ws_to_player.pop(websocket, None)
+
             if not connections:
                 self._room_connections.pop(room_id, None)
                 await self._cleanup_room(room_id)
+
+            if player_id:
+                await self._redis.remove_player(room_id, player_id)
+
+                players = await self._redis.get_players(room_id)
+
+                await self._redis.publish_room_message(
+                    room_id, {
+                        "type": "player_left",
+                        "players": [p["name"] for p in players]
+                    }
+                )
 
         logger.debug("WebSocket disconnected", extra={"room_id": room_id})
 
@@ -277,3 +292,6 @@ class RoomManager:
                 return
 
             await asyncio.sleep(SLEEP_DURATION)
+
+    async def register_player_ws(self, websocket: WebSocket, player_id: str):
+        self._ws_to_player[websocket] = player_id
