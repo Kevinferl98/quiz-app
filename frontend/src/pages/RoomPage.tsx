@@ -33,6 +33,8 @@ export default function RoomPage() {
     const [isFinalLeaderboard, setIsFinalLeaderboard] = useState(false);
     const [totalTime, setTotalTime] = useState<number>(15);
 
+    const [redirect, setRedirect] = useState<string | null>(null);
+
     const connectWebSocket = (playerId: string, username?: string) => {
         if (!room_id) return;
 
@@ -85,7 +87,15 @@ export default function RoomPage() {
                     setIsFinalLeaderboard(!!data.final)
                     break;
                 case "error":
-                    alert(data.message);
+                    switch(data.code) {
+                        case "ROOM_NOT_FOUND":
+                        case "ROOM_ALREADY_STARTED":
+                            alert(data.message);
+                            setRedirect("/");
+                            break;
+                        default:
+                            alert(data.message);
+                    }
                     break;
             }
         };
@@ -127,6 +137,12 @@ export default function RoomPage() {
         }
     }, [isFinalLeaderboard]);
 
+    useEffect(() => {
+        if (redirect) {
+            navigate(redirect);
+        }
+    }, [redirect, navigate]);
+
     const handleSubmitName = () => {
         if (!nameInput.trim()) return;
         const uuid = crypto.randomUUID();
@@ -144,6 +160,15 @@ export default function RoomPage() {
         setSelectedAnswer(answer);
         wsRef.current?.send(JSON.stringify({ type: "answer", answer }));
     };
+
+    const disconnectAndGoHome = () => {
+        if (wsRef.current) {
+            wsRef.current.close();
+            wsRef.current = null;
+        }
+
+        navigate("/");
+    }
 
     const progress = (timer / totalTime) * 100;
     const isCritical = timer <= 5;
@@ -166,7 +191,7 @@ export default function RoomPage() {
     return (
         <div className="room-container">
             <div className="top-bar">
-                <button className="primary-btn" onClick={() => navigate("/")}>Back to Home</button>
+                <button className="primary-btn" onClick={disconnectAndGoHome}>Back to Home</button>
                 <div className="room-id-box">
                     <span className="room-id-label">Room Code</span>
                     <span className="room-id-value">{room_id}</span>

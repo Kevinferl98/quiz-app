@@ -29,9 +29,22 @@ class RoomWebSocketService:
 
         room_meta = await self.redis.get_room_meta(room_id)
         if not room_meta:
-            await websocket.send_json({"type": "error", "message": "Room not found"})
+            await websocket.send_json({
+                "type": "error",
+                "code": "ROOM_NOT_FOUND",
+                "message": "Room not found"
+            })
             await websocket.close()
-            await Exception("Room not found")
+            raise Exception("Room not found")
+
+        if room_meta.get("started"):
+            await websocket.send_json({
+                "type": "error",
+                "code": "ROOM_ALREADY_STARTED",
+                "message": "Room already started"
+            })
+            await websocket.close()
+            raise Exception("Room already started")
 
         role = self._resolve_role(player_id, room_meta)
 
@@ -72,6 +85,7 @@ class RoomWebSocketService:
                 else:
                     await websocket.send_json({
                         "type": "error",
+                        "code": "UNKNOWN_ACTION",
                         "message": "unknown action"
                     })
 

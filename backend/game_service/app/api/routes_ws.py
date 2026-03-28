@@ -7,7 +7,7 @@ router_ws = APIRouter()
 logger = logging.getLogger(__name__)
 
 @router_ws.websocket("/ws/rooms/{room_id}")
-async def weboscket_room(websocket: WebSocket, room_id: str, manager=Depends(get_room_manager), redis=Depends(get_redis_client)):
+async def websocket_room(websocket: WebSocket, room_id: str, manager=Depends(get_room_manager), redis=Depends(get_redis_client)):
     service = RoomWebSocketService(manager, redis)
 
     try:
