@@ -161,6 +161,15 @@ export default function RoomPage() {
         wsRef.current?.send(JSON.stringify({ type: "answer", answer }));
     };
 
+    const disconnectAndGoHome = () => {
+        if (wsRef.current) {
+            wsRef.current.close();
+            wsRef.current = null;
+        }
+
+        navigate("/");
+    }
+
     const progress = (timer / totalTime) * 100;
     const isCritical = timer <= 5;
 
@@ -182,7 +191,7 @@ export default function RoomPage() {
     return (
         <div className="room-container">
             <div className="top-bar">
-                <button className="primary-btn" onClick={() => navigate("/")}>Back to Home</button>
+                <button className="primary-btn" onClick={disconnectAndGoHome}>Back to Home</button>
                 <div className="room-id-box">
                     <span className="room-id-label">Room Code</span>
                     <span className="room-id-value">{room_id}</span>
