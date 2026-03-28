@@ -131,3 +131,16 @@ async def test_room_not_found(service, mock_websocket, mock_redis):
         await service._initialize_session(mock_websocket, "room1")
 
     mock_websocket.close.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_room_already_started(service, mock_websocket, mock_redis):
+    mock_redis.get_room_meta.return_value = {
+        "owner_id": "host-id",
+        "current_question_index": 2,
+        "started": True
+    }
+
+    with pytest.raises(Exception):
+        await service._initialize_session(mock_websocket, "room1")
+
+    mock_websocket.close.assert_called_once()
