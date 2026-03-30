@@ -1,3 +1,5 @@
+import "../../styles/room/WaitingRoom.css";
+
 interface WaitingRoomProps {
     players: string[];
     role: "host" | "player";

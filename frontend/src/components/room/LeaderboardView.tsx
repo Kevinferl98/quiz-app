@@ -1,3 +1,5 @@
+import "../../styles/room/Leaderboard.css";
+
 interface LeaderboardEntry {
     name: string;
     score: number;

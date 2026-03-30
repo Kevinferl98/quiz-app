@@ -1,3 +1,5 @@
+import "../../styles/room/TopBar.css";
+
 interface TopBarProps {
     roomId: string | undefined;
     onBack: () => void;

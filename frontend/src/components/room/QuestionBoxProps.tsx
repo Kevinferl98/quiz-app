@@ -1,3 +1,5 @@
+import "../../styles/room/QuestionBox.css";
+
 interface QuestionBoxProps {
     question: any;
     timer: number;

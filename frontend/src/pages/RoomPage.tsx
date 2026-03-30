@@ -3,7 +3,7 @@ import { TopBar } from "../components/room/TopBar";
 import { WaitingRoom } from "../components/room/WaitingRoom";
 import { QuestionBox } from "../components/room/QuestionBoxProps";
 import { LeaderboardView } from "../components/room/LeaderboardView";
-import "../styles/RoomPage.css";
+import "../styles/room/RoomPage.css";
 
 export default function RoomPage() {
     const { state, actions } = useRoomLogic();
