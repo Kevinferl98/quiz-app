@@ -1,28 +1,78 @@
-.leaderboard-box { margin-top: 24px; }
-.leaderboard-title { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
+.leaderboard-box { 
+  margin-top: 24px;
+}
+
+.leaderboard-title { 
+  font-size: 22px; 
+  font-weight: 600; 
+  margin-bottom: 12px;
+  color: var(--text-main);
+}
 
 .podium {
-  display: flex; justify-content: center; align-items: flex-end;
-  gap: 16px; margin: 30px 0;
+  display: flex; 
+  justify-content: center; 
+  align-items: flex-end;
+  gap: 16px; 
+  margin: 30px 0;
 }
 
 .podium-item {
-  display: flex; flex-direction: column; justify-content: flex-end;
-  align-items: center; width: 100px; border-radius: 12px 12px 0 0;
-  color: white; font-weight: bold; padding: 10px;
-  animation: rise 0.5s ease forwards;
+  display: flex; 
+  flex-direction: column; 
+  justify-content: flex-end;
+  align-items: center; 
+  width: 100px; 
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  color: white; 
+  font-weight: bold; 
+  padding: 10px;
+  animation: rise 0.5s var(--transition-base) forwards;
 }
 
-.podium-item.first { height: 140px; background: linear-gradient(135deg, #fbbf24, #f59e0b); order: 2; }
-.podium-item.second { height: 110px; background: linear-gradient(135deg, #9ca3af, #6b7280); order: 1; }
-.podium-item.third { height: 90px; background: linear-gradient(135deg, #f97316, #ea580c); order: 3; }
+.podium-item.first {
+  height: 140px; 
+  background: linear-gradient(135deg, #fbbf24, var(--color-warning));
+  order: 2;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+
+.podium-item.second {
+  height: 110px;
+  background: linear-gradient(135deg, #9ca3af, var(--text-muted));
+  order: 1;
+}
+
+.podium-item.third {
+  height: 90px;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  order: 3;
+}
 
 .leaderboard-row {
-  display: flex; justify-content: space-between;
-  background: #f3f4f6; padding: 10px 14px; margin: 6px 0; border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  background: var(--bg-light);
+  padding: 10px 14px;
+  margin: 6px 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  transition: transform var(--transition-base);
+}
+
+.leaderboard-row:hover {
+  transform: translateX(5px);
+  background: var(--bg-alt);
 }
 
 @keyframes rise {
-  from { transform: translateY(30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }

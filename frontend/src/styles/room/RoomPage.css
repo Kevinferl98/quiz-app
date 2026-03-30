@@ -3,37 +3,25 @@
   margin: 32px auto;
   padding: 24px;
   text-align: center;
-  font-family: Arial, sans-serif;
 }
 
 .room-container input {
   padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
   margin-bottom: 12px;
   width: 250px;
+  transition: border-color var(--transition-base);
 }
 
-.primary-btn {
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: none;
-  background-color: #2563eb;
-  color: white;
-  cursor: pointer;
-  font-weight: bold;
-  margin: 4px;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.primary-btn:hover {
-  background-color: #1d4ed8;
-  transform: translateY(-1px) scale(1.02);
+.room-container input:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 
 .game-ended-title {
   margin-top: 30px;
   font-size: 26px;
   font-weight: 600;
-  color: #ef4444;
+  color: var(--color-danger);
 }
