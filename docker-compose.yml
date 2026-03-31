@@ -34,16 +34,8 @@ services:
   dynamodb:
     image: amazon/dynamodb-local:3.3.0
     container_name: dynamodb_local
-    user: root
     ports:
       - "8000:8000"
-    entrypoint: ["sh", "-c"]
-    command: >
-      "mkdir -p /data && 
-       chown -R 1000:1000 /data && 
-       exec java -jar DynamoDBLocal.jar -sharedDb -dbPath /data"
-    volumes:
-      - dynamodb_data:/data
     networks:
       - backend_net
 
@@ -138,4 +130,3 @@ networks:
 volumes:
   redis_data:
   keycloak_db_data:
-  dynamodb_data:

@@ -1,310 +1,91 @@
-import { useEffect, useRef, useState, useContext } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { AuthContext } from "../auth/AuthProvider";
-import "../styles/RoomPage.css";
-
-interface LeaderboardEntry {
-    name: string;
-    score: number;
-}
+import { useRoomLogic } from "../hooks/useRoomLogic";
+import { TopBar } from "../components/room/TopBar";
+import { WaitingRoom } from "../components/room/WaitingRoom";
+import { QuestionBox } from "../components/room/QuestionBoxProps";
+import { LeaderboardView } from "../components/room/LeaderboardView";
+import "../styles/room/RoomPage.css";
 
 export default function RoomPage() {
-    const { room_id } = useParams();
-    const navigate = useNavigate();
-    const { keycloak, authenticated } = useContext(AuthContext);
-    
-    const wsRef = useRef<WebSocket | null>(null);
-    const playerIdRef = useRef<string>("");
+    const { state, actions } = useRoomLogic();
+    const {
+        room_id, role, players, question, timer, leaderboard,
+        nameInput, nameSubmitted, selectedAnswer,
+        correctAnswer, isFinalLeaderboard, totalTime, authenticated, viewState
+    } = state;
 
-    const [role, setRole] = useState<"host" | "player">("player");
-    const [players, setPlayers] = useState<string[]>([]);
-    const [question, setQuestion] = useState<any>(null);
-    const [timer, setTimer] = useState<number>(0);
-    const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-    const [gameEnded, setGameEnded] = useState(false);
+    const renderContent = () => {
+        switch (viewState) {
+            case "ENTER_NAME":
+                return (
+                    <>
+                        <h2>Enter your name to join</h2>
+                        <input
+                            type="text"
+                            placeholder="Your name"
+                            value={nameInput}
+                            onChange={(e) =>
+                                actions.setNameInput(e.target.value)
+                            }
+                        />
+                        <button
+                            className="primary-btn"
+                            onClick={actions.handleSubmitName}
+                        >
+                            Join Room
+                        </button>
+                    </>
+                );
 
-    const [connected, setConnected] = useState(false);
-    const [nameInput, setNameInput] = useState("");
-    const [nameSubmitted, setNameSubmitted] = useState(false);
+            case "WAITING":
+                return (
+                    <WaitingRoom
+                        players={players}
+                        role={role}
+                        onStart={actions.handleStart}
+                    />
+                );
 
-    const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-    const [correctAnswer, setCorrectAnswer] = useState<string | null>(null);
+            case "QUESTION":
+                return (
+                    <QuestionBox
+                        question={question}
+                        timer={timer}
+                        totalTime={totalTime}
+                        selectedAnswer={selectedAnswer}
+                        correctAnswer={correctAnswer}
+                        onAnswer={actions.handleAnswer}
+                    />
+                );
 
-    const [isFinalLeaderboard, setIsFinalLeaderboard] = useState(false);
-    const [totalTime, setTotalTime] = useState<number>(15);
+            case "LEADERBOARD":
+                return (
+                    <LeaderboardView
+                        leaderboard={leaderboard}
+                        isFinal={false}
+                    />
+                );
 
-    const [redirect, setRedirect] = useState<string | null>(null);
+            case "FINISHED":
+                return (
+                    <>
+                        <LeaderboardView
+                            leaderboard={leaderboard}
+                            isFinal={true}
+                        />
+                        <h2 className="game-ended-title">Game Finished!</h2>
+                    </>
+                );
 
-    const connectWebSocket = (playerId: string, username?: string) => {
-        if (!room_id) return;
-
-        const tokenQuery = authenticated && keycloak.token ? `?token=${keycloak.token}` : "";
-        const ws = new WebSocket(`ws://nginx-lb:8082/ws/rooms/${room_id}${tokenQuery}`);
-        wsRef.current = ws;
-
-        ws.onopen = () => {
-            setConnected(true);
-            if (username && role !== "host") {
-                ws.send(JSON.stringify({type: "join", name: username}));
-            }
-        };
-
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-
-            switch (data.type) {
-                case "role":
-                    setRole(data.role);
-                    playerIdRef.current = data.player_id;
-                    if (authenticated && data.role !== "host") {
-                        ws.send(JSON.stringify({ type: "join", name: keycloak.tokenParsed?.preferred_username }));
-                    }
-                    break;
-                case "player_joined":
-                case "player_left":
-                    setPlayers(data.players);
-                    break;
-                case "question":
-                    setQuestion(data.question);
-                    setLeaderboard([]);
-                    setSelectedAnswer(null);
-                    setCorrectAnswer(null);
-
-                    const duration = data.question.duration || 15;
-                    setTimer(duration);
-                    setTotalTime(duration);
-
-                    break;
-                case "timer":
-                    setTimer(data.seconds);
-                    break;
-                case "answer_result":
-                    setCorrectAnswer(data.correct_answer);
-                    break;
-                case "leaderboard":
-                    setQuestion(null);
-                    setLeaderboard(data.leaderboard);
-                    setIsFinalLeaderboard(!!data.final)
-                    break;
-                case "error":
-                    switch(data.code) {
-                        case "ROOM_NOT_FOUND":
-                        case "ROOM_ALREADY_STARTED":
-                            alert(data.message);
-                            setRedirect("/");
-                            break;
-                        default:
-                            alert(data.message);
-                    }
-                    break;
-            }
-        };
-
-        ws.onclose = () => setConnected(false);
+            default:
+                return null;
+        }
     };
-
-    useEffect(() => {
-        if (timer <= 0) return;
-
-        const interval = setInterval(() => {
-            setTimer((t) => {
-                if (t <= 1) {
-                    clearInterval(interval);
-                    return 0;
-                }
-                return t - 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [timer]);
-
-    useEffect(() => {
-        if (!room_id) return;
-
-        if (authenticated) {
-            const playerId = keycloak.tokenParsed?.sub as string;
-            const username = keycloak.tokenParsed?.preferred_username as string;
-            playerIdRef.current = playerId;
-            connectWebSocket(playerId, username);
-            setNameSubmitted(true);
-        }
-    }, [authenticated, room_id]);
-
-    useEffect(() => {
-        if (isFinalLeaderboard) {
-            setGameEnded(true);
-        }
-    }, [isFinalLeaderboard]);
-
-    useEffect(() => {
-        if (redirect) {
-            navigate(redirect);
-        }
-    }, [redirect, navigate]);
-
-    const handleSubmitName = () => {
-        if (!nameInput.trim()) return;
-        const uuid = crypto.randomUUID();
-        playerIdRef.current = uuid;
-        connectWebSocket(uuid, nameInput.trim());
-        setNameSubmitted(true);
-    }
-
-    const handleStart = () => {
-        wsRef.current?.send(JSON.stringify({ type: "start"}));
-    };
-
-    const handleAnswer = (answer: string) => {
-        if (selectedAnswer) return;
-        setSelectedAnswer(answer);
-        wsRef.current?.send(JSON.stringify({ type: "answer", answer }));
-    };
-
-    const disconnectAndGoHome = () => {
-        if (wsRef.current) {
-            wsRef.current.close();
-            wsRef.current = null;
-        }
-
-        navigate("/");
-    }
-
-    const progress = (timer / totalTime) * 100;
-    const isCritical = timer <= 5;
-
-    if (!authenticated && !nameSubmitted) {
-        return (
-            <div className="room-container">
-                <h2>Enter your name to join</h2>
-                <input
-                    type="text"
-                    placeholder="Your name"
-                    value={nameInput}
-                    onChange={(e) => setNameInput(e.target.value)} 
-                ></input>
-                <button className="primary-btn" onClick={handleSubmitName}>Join Room</button>
-            </div>
-        );
-    }
 
     return (
         <div className="room-container">
-            <div className="top-bar">
-                <button className="primary-btn" onClick={disconnectAndGoHome}>Back to Home</button>
-                <div className="room-id-box">
-                    <span className="room-id-label">Room Code</span>
-                    <span className="room-id-value">{room_id}</span>
-                </div>
-            </div>
+            <TopBar roomId={room_id} onBack={actions.disconnectAndGoHome} />
 
-            {!question && !gameEnded && (
-                <div className="waiting-room">
-                    <h2 className="waiting-title">Waiting Room</h2>
-                    <p className="waiting-subtitle">
-                        {players.length} player{players.length !== 1 && "s"} joined
-                    </p>
-
-                    <div className="players-grid">
-                        {players.map((p, i) => (
-                            <div key={i} className="player-card">
-                                <div className="player-avatar">
-                                    {p.charAt(0).toUpperCase()}
-                                </div>
-
-                                <div className="player-info">
-                                    <span className="player-name">{p}</span>
-                                    {role === "host" && i === 0 && (
-                                        <span className="host-badge">HOST</span>
-                                    )}
-                                </div>
-
-                                <div className="online-dot"/>
-                            </div>
-                        ))}
-                    </div>
-                    {role === "host" && (
-                        <button className="primary-btn start-btn big-start" onClick={handleStart}>Start Quiz</button>
-                    )}
-                </div>
-            )}
-            
-            {question && (
-                <div className="question-box">
-                    <div className="question-header">
-                        <h2 className="question-text">{question.question_text}</h2>
-                    </div>
-                    <div className="timer-container">
-                        <div className="timer-bar" style={{ width: `${progress}%` }}/>
-                        <div className="timer-text">{timer}s</div>
-                    </div>
-                    
-                    <div className="options">
-                        {question.options.map((opt: string, i: number) => {
-                            let className = "option-btn";
-
-                            if (selectedAnswer === opt) className += " selected";
-                            if (correctAnswer) {
-                                if (opt === correctAnswer) className += " correct";
-                                else if (opt === selectedAnswer) className += " wrong";
-                            }
-
-                            return (
-                                <button
-                                    key={i}
-                                    className={className}
-                                    onClick={() => handleAnswer(opt)}
-                                    disabled={!!selectedAnswer}
-                                >{opt}</button>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {leaderboard.length > 0 && (
-                <div className="leaderboard-box">
-                    <h2 className="leaderboard-title">
-                        {isFinalLeaderboard ? "Final Results" : "Leaderboard"}
-                    </h2>
-
-                    {/* PODIUM */}
-                    <div className="podium">
-                        {leaderboard[1] && (
-                            <div className="podium-item second">
-                                <div className="podium-name">{leaderboard[1].name}</div>
-                                <div className="podium-score">{leaderboard[1].score}</div>
-                            </div>
-                        )}
-
-                        {leaderboard[0] && (
-                            <div className="podium-item first">
-                                <div className="podium-name">{leaderboard[0].name}</div>
-                                <div className="podium-score">{leaderboard[0].score}</div>
-                            </div>
-                        )}
-
-                        {leaderboard[2] && (
-                            <div className="podium-item third">
-                                <div className="podium-name">{leaderboard[2].name}</div>
-                                <div className="podium-score">{leaderboard[2].score}</div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="leaderboard-list">
-                        {leaderboard.slice(3).map((entry, i) => (
-                            <div key={i} className="leaderboard-row">
-                                <span>#{i + 4}</span>
-                                <span>{entry.name}</span>
-                                <span>{entry.score}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {gameEnded && <h2 className="game-ended-title">Game Finished!</h2>}
+            {renderContent()}
         </div>
     )
 }

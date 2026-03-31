@@ -1,0 +1,27 @@
+.room-container {
+  max-width: 800px;
+  margin: 32px auto;
+  padding: 24px;
+  text-align: center;
+}
+
+.room-container input {
+  padding: 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  margin-bottom: 12px;
+  width: 250px;
+  transition: border-color var(--transition-base);
+}
+
+.room-container input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.game-ended-title {
+  margin-top: 30px;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--color-danger);
+}
