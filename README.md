@@ -4,7 +4,7 @@
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![AWS](https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
 
 A real-time multiplayer quiz platform where users can create, join, and compete in interactive challenges. Built with a distributed microservices architecture to handle persistent quiz data and low-latency game states.
 
@@ -42,7 +42,7 @@ The system is designed as a distributed set of services:
 
 **Real-time:** WebSockets for bi-directional client-server communication.
 
-**DynamoDB**: Scalable NoSQL for quiz storage.
+**MongoDB**: Scalable NoSQL for quiz storage.
 
 **Redis**: In-memory store for game session state and real-time messaging.
 

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List, Optional, Dict
 
 class Question(BaseModel):
@@ -8,10 +8,10 @@ class Question(BaseModel):
     correct_option: str
 
 class Quiz(BaseModel):
-    quizId: Optional[str] = Field(None, exclude=True)
-    owner_id: Optional[str] = Field(None, exclude=True)
+    quizId: str
+    owner_id: str
     title: str
-    description: Optional[str] = None
+    description: str | None = None
     questions: List[Question]
     is_public: bool = True
 

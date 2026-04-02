@@ -1,53 +1,56 @@
-from app.db.dynamodb_client import quiz_table
-from typing import Dict, Any
 import uuid
+from app.schemas.quiz import Quiz, QuizCreateRequest
+from app.repositories.quiz_repository import QuizRepository
+from typing import Dict, Any
 
-def list_public_quizzes() -> list[Dict[str, Any]]:
-    response = quiz_table.scan(
-        FilterExpression="is_public = :val",
-        ExpressionAttributeValues={":val": True},
-        ProjectionExpression="quizId, title"
-    )
-    return response.get("Items", [])
+class QuizService:
+    def __init__(self, repo: QuizRepository) -> None:
+        self.repo = repo
 
-def list_personal_quizzes(owner_id: str) -> list[Dict[str, Any]]:
-    response = quiz_table.scan(
-        FilterExpression="owner_id = :owner_id",
-        ExpressionAttributeValues={":owner_id": owner_id}
-    )
+    def list_public_quizzes(self) -> list[Dict[str, Any]]:
+        return self.repo.find_public_quizzes()
 
-    return response.get("Items", [])
+    def list_personal_quizzes(self, owner_id: str) -> list[Dict[str, Any]]:
+        return self.repo.find_by_owner(owner_id)
 
-def get_quiz_by_id(quiz_id: str) -> Dict[str, Any] | None:
-    response = quiz_table.get_item(Key={"quizId": quiz_id})
-    return response.get("Item")
+    def get_quiz_by_id(self, quiz_id: str) -> Dict[str, Any] | None:
+        return self.repo.find_by_id(quiz_id)
 
-def create_quiz(quiz_data: dict, owner_id: str)  -> str:
-    quiz_id = str(uuid.uuid4())
-    quiz_data["quizId"] = quiz_id
-    quiz_data["owner_id"] = owner_id
-    quiz_table.put_item(Item=quiz_data)
-    return quiz_id
+    def create_quiz(self, quiz_data: QuizCreateRequest, owner_id: str) -> str:
+        quiz_id = str(uuid.uuid4())
 
-def delete_quiz(quiz_id: str, user_id: str) -> None:
-    response = quiz_table.get_item(Key={"quizId": quiz_id})
+        quiz = Quiz(
+            quizId=quiz_id,
+            owner_id=owner_id,
+            **quiz_data.model_dump()
+        )
 
-    if "Item" not in response:
-        raise ValueError("Quiz not found")
+        self.repo.insert(quiz.model_dump())
+        return quiz_id
 
-    if response["Item"]["owner_id"] != user_id:
-        raise PermissionError("Not owner")
+    def delete_quiz(self, quiz_id: str, user_id: str) -> None:
+        quiz = self.repo.find_by_id(quiz_id)
 
-    quiz_table.delete_item(Key={"quizId": quiz_id})
+        if not quiz:
+            raise ValueError("Quiz not found")
 
-def check_answer(quiz_id: str, question_id: str, answer: str) -> bool:
-    quiz = get_quiz_by_id(quiz_id)
+        if quiz["owner_id"] != user_id:
+            raise PermissionError("Not owner")
 
-    if not quiz:
-        raise ValueError("Quiz not found")
-    
-    question = next((q for q in quiz.get("questions", []) if q.get("id") == question_id), None)
-    if not question:
-        raise ValueError("Question not found in quiz")
-    
-    return question.get("correct_option") == answer
+        self.repo.delete(quiz_id)
+
+    def check_answer(self, quiz_id: str, question_id: str, answer: str) -> bool:
+        quiz = self.repo.find_by_id(quiz_id)
+
+        if not quiz:
+            raise ValueError("Quiz not found")
+
+        question = next(
+            (q for q in quiz.get("questions", []) if q.get("id") == question_id),
+            None
+        )
+
+        if not question:
+            raise ValueError("Question not found in quiz")
+
+        return question.get("correct_option") == answer
