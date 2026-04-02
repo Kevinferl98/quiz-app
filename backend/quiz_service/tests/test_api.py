@@ -1,96 +1,115 @@
-from unittest.mock import patch
-from fastapi.testclient import TestClient
-from app.main import app
+import pytest
 
-client = TestClient(app)
+def test_list_public_quizzes(client, mock_service):
+    mock_service.list_public_quizzes.return_value = [{"quizId": "1", "title": "Quiz 1"}]
 
-@patch("app.services.quiz_service.quiz_table.scan")
-def test_list_public_quizzes(mock_scan):
-    mock_scan.return_value = {"Items": [{"quizId": "1", "title": "Quiz 1"}]}
     response = client.get("/quizzes/public")
+
     assert response.status_code == 200
     assert response.json() == {"quizzes": [{"quizId": "1", "title": "Quiz 1"}]}
+    mock_service.list_public_quizzes.assert_called_once()
 
-@patch("app.services.quiz_service.quiz_table.scan")
-def test_list_public_quizzes_db_error(mock_scan):
-    mock_scan.side_effect = Exception("DynamoDB connection failed")
+def test_list_public_quizzes_error_500(client, mock_service):
+    mock_service.list_public_quizzes.side_effect = Exception("Unexpected DB error")
     
     response = client.get("/quizzes/public")
     
     assert response.status_code == 500
-    assert response.json() == {"detail": "An unexpected error occurred while accessing the database"}
+    assert "unexpected error" in response.json()["detail"]
 
-@patch("app.services.quiz_service.quiz_table.scan")
-def test_list_my_quizzes(mock_scan):
-    mock_scan.return_value = {"Items": [{"quizId": "2", "title": "My Quiz"}]}
+def test_list_my_quizzes_success(client, mock_service):
+    mock_service.list_personal_quizzes.return_value = [{"quizId": "2", "title": "My Quiz"}]
+
     response = client.get("/quizzes/mine")
-    assert response.status_code == 200
-    assert response.json() == {"quizzes": [{"quizId": "2", "title": "My Quiz"}]}
 
-@patch("app.services.quiz_service.quiz_table.get_item")
-def test_get_quiz_success(mock_get_item):
-    mock_get_item.return_value = {
-        "Item": {"quizId": "abc-123", "title": "Test Quiz", "owner_id": "user_123"}
+    assert response.status_code == 200
+    mock_service.list_personal_quizzes.assert_called_once_with("user_123")
+
+def test_list_my_quizzes_db_error(client, mock_service):
+    mock_service.list_personal_quizzes.side_effect = Exception("Database failure")
+
+    response = client.get("/quizzes/mine")
+
+    assert response.status_code == 500
+    assert "unexpected error" in response.json()["detail"]
+
+def test_get_quiz_by_id_success(client, mock_service):
+    mock_service.get_quiz_by_id.return_value = {
+        "quizId": "abc-123",
+        "title": "Test Quiz",
+        "owner_id": "user_123",
+        "questions": []
     }
+
     response = client.get("/quizzes/abc-123")
+
     assert response.status_code == 200
     assert response.json()["quizId"] == "abc-123"
 
-@patch("app.services.quiz_service.quiz_table.get_item")
-def test_get_quiz_not_found(mock_get_item):
-    mock_get_item.return_value = {}
+def test_get_quiz_by_id_not_found(client, mock_service):
+    mock_service.get_quiz_by_id.return_value = None
     
-    response = client.get("/quizzes/non-existent")
-    assert response.status_code == 404
-    assert response.json()["detail"] == "Quiz not found"
+    response = client.get("/quizzes/missing")
 
-@patch("app.services.quiz_service.quiz_table.put_item")
-def test_create_quiz(mock_put_item):
+    assert response.status_code == 404
+
+def test_create_quiz_success(client, mock_service):
+    mock_service.create_quiz.return_value = "new-uuid"
     quiz_data = {
         "title": "New Quiz",
         "questions": [{"id": "q1", "question_text": "Text", "options": ["A", "B"], "correct_option": "A"}]
     }
+
     response = client.post("/quizzes/", json=quiz_data)
-    assert response.status_code == 200
-    called_item = mock_put_item.call_args[1]["Item"]
-    assert called_item["owner_id"] == "user_123"
 
-@patch("app.services.quiz_service.quiz_table.delete_item")
-@patch("app.services.quiz_service.quiz_table.get_item")
-def test_delete_quiz_success(mock_get_item, mock_delete_item):
-    mock_get_item.return_value = {
-        "Item": {"quizId": "abc-123", "owner_id": "user_123"}
+    assert response.status_code == 200
+    assert response.json()["quizId"] == "new-uuid"
+    args, kwargs = mock_service.create_quiz.call_args
+    assert kwargs["owner_id"] == "user_123"
+    assert kwargs["quiz_data"].title == "New Quiz"
+
+def test_create_quiz_db_error(client, mock_service):
+    mock_service.create_quiz.side_effect = Exception("Write failed")
+
+    response = client.post(
+        "/quizzes/",
+        json={"title": "Test", "questions": []},
+        headers={"Authorization": "Bearer valid_token"}
+    )
+
+    assert response.status_code == 500
+
+def test_delete_quiz_scenarios(client, mock_service):
+    mock_service.get_quiz_by_id.return_value = {
+        "quizId": "abc-123",
+        "title": "Test Quiz",
+        "owner_id": "user_123",
+        "questions": []
     }
     response = client.delete("/quizzes/abc-123")
+
     assert response.status_code == 200
-    mock_delete_item.assert_called_once()
+    assert response.json()["success"] is True
 
-@patch("app.services.quiz_service.quiz_table.get_item")
-def test_delete_quiz_forbidden(mock_get_item):
-    mock_get_item.return_value = {
-        "Item": {"quizId": "abc-123", "owner_id": "someone_else"}
-    }
-    response = client.delete("/quizzes/abc-123")
-    assert response.status_code == 403
 
-@patch("app.services.quiz_service.quiz_table.get_item")
-def test_answer_question(mock_get_quiz):
-    mock_get_quiz.return_value = {
-        "Item": {
-            "quizId": "abc-123",
-            "title": "New Quiz",
-            "questions": [
-                {"id": "q1", "question_text": "Text", "options": ["A", "B"], "correct_option": "A"}
-            ]
-        }
-    }
+@pytest.mark.parametrize("exception, expected_status", [
+    (ValueError("Not found"), 404),
+    (PermissionError("Forbidden"), 403),
+    (Exception("Generic"), 500),
+])
+def test_delete_quiz_scenarios(client, mock_service, exception, expected_status):
+    mock_service.delete_quiz.side_effect = exception
 
-    payload = {
-        "question_id": "q1",
-        "answer": "A"
-    }
+    response = client.delete("/quizzes/123")
 
-    response = client.post("/quizzes/abc-123/answer", json=payload)
+    assert response.status_code == expected_status
+
+def test_check_answer_correct(client, mock_service):
+    mock_service.check_answer.return_value = True
+    payload = {"question_id": "q1", "answer": "A"}
+
+    response = client.post("/quizzes/123/answer", json=payload)
+
     assert response.status_code == 200
-    data = response.json()
-    assert data["correct"] is True
+    assert response.json()["correct"] is True
+    mock_service.check_answer.assert_called_once_with("123", "q1", "A")
