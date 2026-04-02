@@ -1,10 +1,15 @@
 import grpc
 from app.services.grpc_generated import quiz_service_pb2, quiz_service_pb2_grpc
-from app.services.quiz_service import get_quiz_by_id
+from app.services.quiz_service import QuizService
+from app.repositories.quiz_repository import QuizRepository
+from app.db.mongo_client import mongo_db
 
 class QuizServiceServicer(quiz_service_pb2_grpc.QuizServiceServicer):
+    def __init__(self, quiz_service: QuizService):
+        self.quiz_service = quiz_service
+
     async def GetQuizById(self, request, context):
-        quiz_data = get_quiz_by_id(request.quizId)
+        quiz_data = self.quiz_service.get_quiz_by_id(request.quizId)
 
         if not quiz_data:
             await context.abort(grpc.StatusCode.NOT_FOUND, "Quiz not found")
@@ -24,9 +29,12 @@ class QuizServiceServicer(quiz_service_pb2_grpc.QuizServiceServicer):
         )
 
 async def serve():
+    repo = QuizRepository(mongo_db.quizzes)
+    service = QuizService(repo)
+
     server = grpc.aio.server()
     quiz_service_pb2_grpc.add_QuizServiceServicer_to_server(
-        QuizServiceServicer(), server
+        QuizServiceServicer(quiz_service=service), server
     )
     server.add_insecure_port("[::]:50051")
     await server.start()

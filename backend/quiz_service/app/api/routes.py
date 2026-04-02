@@ -1,12 +1,13 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException
-from app.services import quiz_service
 from app.auth import get_current_user
 from app.schemas.quiz import (
     AnswerResponse, AnswerRequest, QuizzesResponse,
     QuizCreateRequest, QuizCreateResponse, QuizDeleteResponse, QuizOut, QuizDetailResponse,
     QuestionOut
 )
-import logging
+from app.services.quiz_service import QuizService
+from app.dependencies import get_quiz_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/quizzes", tags=["quizzes"])
@@ -14,9 +15,9 @@ router = APIRouter(prefix="/quizzes", tags=["quizzes"])
 DB_ERROR_MSG = "An unexpected error occurred while accessing the database"
 
 @router.get("/public", response_model=QuizzesResponse)
-def list_public_quizzes():
+def list_public_quizzes(service: QuizService = Depends(get_quiz_service)):
     try:
-        quizzes = quiz_service.list_public_quizzes()
+        quizzes = service.list_public_quizzes()
         logger.info(f"Returned {len(quizzes)} public quizzes")
 
         quizzes_out = [QuizOut(title=q["title"], quizId=q["quizId"]) for q in quizzes]
@@ -26,13 +27,13 @@ def list_public_quizzes():
         raise HTTPException(status_code=500, detail=DB_ERROR_MSG)
 
 @router.get("/mine", response_model=QuizzesResponse)
-def list_my_quizzes(user=Depends(get_current_user)):
+def list_my_quizzes(user=Depends(get_current_user), service: QuizService = Depends(get_quiz_service)):
     if not user:
         logger.warning("Unauthorized attempt to list personal quizzes")
         raise HTTPException(status_code=403, detail="Login required")
     
     try:
-        quizzes = quiz_service.list_personal_quizzes(user["sub"])
+        quizzes = service.list_personal_quizzes(user["sub"])
         logger.info(f"User {user['sub']} retrieved {len(quizzes)} personal quizzes")
         quizzes_out = [QuizOut(title=q["title"], quizId=q["quizId"]) for q in quizzes]
         return QuizzesResponse(quizzes=quizzes_out)
@@ -41,9 +42,9 @@ def list_my_quizzes(user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=DB_ERROR_MSG)
 
 @router.get("/{quiz_id}", response_model=QuizDetailResponse)
-def get_quiz(quiz_id: str):
+def get_quiz(quiz_id: str, service: QuizService = Depends(get_quiz_service)):
     try:
-        quiz = quiz_service.get_quiz_by_id(quiz_id)
+        quiz = service.get_quiz_by_id(quiz_id)
         if not quiz:
             logger.warning(f"Quiz {quiz_id} not found")
             raise HTTPException(status_code=404, detail="Quiz not found")
@@ -70,13 +71,13 @@ def get_quiz(quiz_id: str):
         raise HTTPException(status_code=500, detail=DB_ERROR_MSG)
 
 @router.post("/", response_model=QuizCreateResponse)
-def create_quiz(quiz: QuizCreateRequest, user=Depends(get_current_user)):    
+def create_quiz(quiz: QuizCreateRequest, user=Depends(get_current_user), service: QuizService = Depends(get_quiz_service)):
     if user is None:
         raise HTTPException(status_code=401, detail="User not logged in")
     
     try:
-        quiz_id = quiz_service.create_quiz(
-            quiz_data=quiz.model_dump(),
+        quiz_id = service.create_quiz(
+            quiz_data=quiz,
             owner_id=user["sub"]
         )
         logger.info(f"User {user['sub']} created quiz {quiz_id}")
@@ -86,12 +87,12 @@ def create_quiz(quiz: QuizCreateRequest, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=DB_ERROR_MSG)
 
 @router.delete("/{quiz_id}", response_model=QuizDeleteResponse)
-def delete_quiz(quiz_id: str, user=Depends(get_current_user)):
+def delete_quiz(quiz_id: str, user=Depends(get_current_user), service: QuizService = Depends(get_quiz_service)):
     if user is None:
         raise HTTPException(status_code=401, detail="User not logged in")
 
     try:
-        quiz_service.delete_quiz(quiz_id=quiz_id, user_id=user["sub"])
+        service.delete_quiz(quiz_id=quiz_id, user_id=user["sub"])
         logger.info(f"User {user['sub']} deleted quiz {quiz_id}")
         return QuizDeleteResponse(success=True)
     except ValueError:
@@ -103,9 +104,9 @@ def delete_quiz(quiz_id: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=DB_ERROR_MSG)
     
 @router.post("/{quiz_id}/answer", response_model=AnswerResponse)
-def answer_question(quiz_id: str, payload: AnswerRequest):
+def answer_question(quiz_id: str, payload: AnswerRequest, service: QuizService = Depends(get_quiz_service)):
     try:
-        correct = quiz_service.check_answer(quiz_id, payload.question_id, payload.answer)
+        correct = service.check_answer(quiz_id, payload.question_id, payload.answer)
         return AnswerResponse(correct=correct)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
