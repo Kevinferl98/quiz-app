@@ -79,7 +79,7 @@ def test_create_quiz_db_error(client, mock_service):
 
     assert response.status_code == 500
 
-def test_delete_quiz_scenarios(client, mock_service):
+def test_delete_quiz_success(client, mock_service):
     mock_service.get_quiz_by_id.return_value = {
         "quizId": "abc-123",
         "title": "Test Quiz",
