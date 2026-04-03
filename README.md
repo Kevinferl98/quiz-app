@@ -24,7 +24,7 @@ A real-time multiplayer quiz platform where users can create, join, and compete 
 
 The system is designed as a distributed set of services:
 
-**Quiz Service**: A Python (FastAPI) service that manages the lifecycle of quizzes (CRUD), persisting data in DynamoDB.
+**Quiz Service**: A Python (FastAPI) service that manages the lifecycle of quizzes (CRUD), persisting data in MongoDB.
 
 **Game Service**: The core engine for multiplayer logic. It handles WebSocket connections for real-time interaction and uses Redis Pub/Sub to synchronize state across multiple instances.
 
