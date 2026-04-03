@@ -4,6 +4,18 @@ import asyncio
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router
+from app.exception import (
+    QuizNotFoundError,
+    QuestionNotFoundError,
+    QuizPermissionError,
+    DatabaseError
+)
+from app.exception_handlers import (
+    quiz_not_found_handler,
+    question_not_found_handler,
+    permission_error_handler,
+    db_error_handler
+)
 from app.logging_config import setup_logging
 from app.middleware.logging_middleware import setup_http_logging
 from app.services.quiz_grpc_server import serve as serve_grpc
@@ -35,3 +47,8 @@ app.add_middleware(
 
 setup_http_logging(app)
 app.include_router(router)
+
+app.add_exception_handler(QuizNotFoundError, quiz_not_found_handler)
+app.add_exception_handler(QuestionNotFoundError, question_not_found_handler)
+app.add_exception_handler(QuizPermissionError, permission_error_handler)
+app.add_exception_handler(DatabaseError, db_error_handler)

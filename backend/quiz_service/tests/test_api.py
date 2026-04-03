@@ -1,4 +1,5 @@
 import pytest
+from app.exception import DatabaseError, QuizNotFoundError, QuizPermissionError
 
 def test_list_public_quizzes(client, mock_service):
     mock_service.list_public_quizzes.return_value = [{"quizId": "1", "title": "Quiz 1"}]
@@ -10,12 +11,12 @@ def test_list_public_quizzes(client, mock_service):
     mock_service.list_public_quizzes.assert_called_once()
 
 def test_list_public_quizzes_error_500(client, mock_service):
-    mock_service.list_public_quizzes.side_effect = Exception("Unexpected DB error")
+    mock_service.list_public_quizzes.side_effect = DatabaseError()
     
     response = client.get("/quizzes/public")
     
-    assert response.status_code == 500
-    assert "unexpected error" in response.json()["detail"]
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Service temporarily unavailable"
 
 def test_list_my_quizzes_success(client, mock_service):
     mock_service.list_personal_quizzes.return_value = [{"quizId": "2", "title": "My Quiz"}]
@@ -26,12 +27,12 @@ def test_list_my_quizzes_success(client, mock_service):
     mock_service.list_personal_quizzes.assert_called_once_with("user_123")
 
 def test_list_my_quizzes_db_error(client, mock_service):
-    mock_service.list_personal_quizzes.side_effect = Exception("Database failure")
+    mock_service.list_personal_quizzes.side_effect = DatabaseError()
 
     response = client.get("/quizzes/mine")
 
-    assert response.status_code == 500
-    assert "unexpected error" in response.json()["detail"]
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Service temporarily unavailable"
 
 def test_get_quiz_by_id_success(client, mock_service):
     mock_service.get_quiz_by_id.return_value = {
@@ -47,7 +48,7 @@ def test_get_quiz_by_id_success(client, mock_service):
     assert response.json()["quizId"] == "abc-123"
 
 def test_get_quiz_by_id_not_found(client, mock_service):
-    mock_service.get_quiz_by_id.return_value = None
+    mock_service.get_quiz_by_id.side_effect = QuizNotFoundError()
     
     response = client.get("/quizzes/missing")
 
@@ -62,14 +63,14 @@ def test_create_quiz_success(client, mock_service):
 
     response = client.post("/quizzes/", json=quiz_data)
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.json()["quizId"] == "new-uuid"
     args, kwargs = mock_service.create_quiz.call_args
     assert kwargs["owner_id"] == "user_123"
     assert kwargs["quiz_data"].title == "New Quiz"
 
 def test_create_quiz_db_error(client, mock_service):
-    mock_service.create_quiz.side_effect = Exception("Write failed")
+    mock_service.create_quiz.side_effect = DatabaseError()
 
     response = client.post(
         "/quizzes/",
@@ -77,7 +78,7 @@ def test_create_quiz_db_error(client, mock_service):
         headers={"Authorization": "Bearer valid_token"}
     )
 
-    assert response.status_code == 500
+    assert response.status_code == 503
 
 def test_delete_quiz_success(client, mock_service):
     mock_service.get_quiz_by_id.return_value = {
@@ -93,9 +94,9 @@ def test_delete_quiz_success(client, mock_service):
 
 
 @pytest.mark.parametrize("exception, expected_status", [
-    (ValueError("Not found"), 404),
-    (PermissionError("Forbidden"), 403),
-    (Exception("Generic"), 500),
+    (QuizNotFoundError(), 404),
+    (QuizPermissionError(), 403),
+    (DatabaseError(), 503),
 ])
 def test_delete_quiz_scenarios(client, mock_service, exception, expected_status):
     mock_service.delete_quiz.side_effect = exception
