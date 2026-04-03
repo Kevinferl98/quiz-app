@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
+from app.exception import QuizNotFoundError, QuizPermissionError, QuestionNotFoundError
 from app.services.quiz_service import QuizService
 from app.schemas.quiz import QuizCreateRequest, Question
 
@@ -51,13 +52,13 @@ def test_delete_quiz_success(service, mock_repo):
 def test_delete_quiz_not_found(service, mock_repo):
     mock_repo.find_by_id.return_value = None
 
-    with pytest.raises(ValueError, match="Quiz not found"):
+    with pytest.raises(QuizNotFoundError):
         service.delete_quiz("invalid", "user_1")
 
 def test_delete_quiz_permission_error(service, mock_repo):
     mock_repo.find_by_id.return_value = {"quizId": "q_1", "owner_id": "owner_real"}
 
-    with pytest.raises(PermissionError, match="Not owner"):
+    with pytest.raises(QuizPermissionError):
         service.delete_quiz("q_1", "hacker_user")
 
 def test_check_answer_correct(service, mock_repo):
@@ -74,11 +75,11 @@ def test_check_answer_correct(service, mock_repo):
 def test_check_answer_question_not_found(service, mock_repo):
     mock_repo.find_by_id.return_value = {"questions": [{"id": "q1"}]}
 
-    with pytest.raises(ValueError, match="Question not found in quiz"):
+    with pytest.raises(QuestionNotFoundError):
         service.check_answer("quiz_1", "non_existent_q", "A")
 
 def test_check_answer_quiz_not_found(service, mock_repo):
     mock_repo.find_by_id.return_value = None
 
-    with pytest.raises(ValueError, match="Quiz not found"):
+    with pytest.raises(QuizNotFoundError):
         service.check_answer("missing_quiz", "q1", "A")
