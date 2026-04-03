@@ -48,7 +48,7 @@ def test_get_quiz_by_id_success(client, mock_service):
     assert response.json()["quizId"] == "abc-123"
 
 def test_get_quiz_by_id_not_found(client, mock_service):
-    mock_service.get_quiz_by_id.return_value = None
+    mock_service.get_quiz_by_id.side_effect = QuizNotFoundError()
     
     response = client.get("/quizzes/missing")
 
