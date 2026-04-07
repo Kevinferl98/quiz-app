@@ -2,12 +2,12 @@ import pytest
 from app.exception import DatabaseError, QuizNotFoundError, QuizPermissionError
 
 def test_list_public_quizzes(client, mock_service):
-    mock_service.list_public_quizzes.return_value = [{"quizId": "1", "title": "Quiz 1"}]
+    mock_service.list_public_quizzes.return_value = ([{"quizId": "1", "title": "Quiz 1"}], 1)
 
     response = client.get("/quizzes/public")
 
     assert response.status_code == 200
-    assert response.json() == {"quizzes": [{"quizId": "1", "title": "Quiz 1"}]}
+    assert response.json() == {"page": 1, "pages": 1, "total": 1, "quizzes": [{"quizId": "1", "title": "Quiz 1"}]}
     mock_service.list_public_quizzes.assert_called_once()
 
 def test_list_public_quizzes_error_500(client, mock_service):

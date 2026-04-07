@@ -12,8 +12,11 @@ class QuizService:
     def __init__(self, repo: QuizRepository) -> None:
         self.repo = repo
 
-    def list_public_quizzes(self) -> list[Dict[str, Any]]:
-        return self.repo.find_public_quizzes()
+    def list_public_quizzes(self, page: int, limit: int) -> tuple[list[dict[str, Any]], int]:
+        quizzes = self.repo.find_public_quizzes(page, limit)
+        total = self.repo.count_public_quizzes()
+
+        return quizzes, total
 
     def list_personal_quizzes(self, owner_id: str) -> list[Dict[str, Any]]:
         return self.repo.find_by_owner(owner_id)

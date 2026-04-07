@@ -7,12 +7,25 @@ class QuizRepository:
     def __init__(self, collection: Collection):
         self.collection = collection
 
-    def find_public_quizzes(self) -> list[Dict[str, Any]]:
+    def find_public_quizzes(self, page: int, limit: int) -> list[Dict[str, Any]]:
         try:
-            return list(self.collection.find(
-                {"is_public": True},
-                {"quizId": 1, "title": 1, "_id": 0}
-            ))
+            skip = (page - 1) * limit
+
+            return list(
+                self.collection.find(
+                    {"is_public": True},
+                    {"quizId": 1, "title": 1, "_id": 0}
+                )
+                .sort("quizId", 1)
+                .skip(skip)
+                .limit(limit)
+            )
+        except PyMongoError as e:
+            raise DatabaseError("Error fetching public quizzes") from e
+
+    def count_public_quizzes(self) -> int:
+        try:
+            return self.collection.count_documents({"is_public": True})
         except PyMongoError as e:
             raise DatabaseError("Error fetching public quizzes") from e
 

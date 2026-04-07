@@ -1,10 +1,10 @@
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status, Path
+from fastapi import APIRouter, Depends, HTTPException, status, Path, Query
 from app.auth import get_current_user
 from app.schemas.quiz import (
     AnswerResponse, AnswerRequest, QuizzesResponse,
     QuizCreateRequest, QuizCreateResponse, QuizDeleteResponse, QuizOut, QuizDetailResponse,
-    QuestionOut
+    QuestionOut, QuizzesResponsePaginated
 )
 from app.services.quiz_service import QuizService
 from app.dependencies import get_quiz_service
@@ -22,19 +22,26 @@ def get_current_user_required(user=Depends(get_current_user)):
 
 @router.get(
     "/public",
-    response_model=QuizzesResponse,
+    response_model=QuizzesResponsePaginated,
     summary="List public quizzes"
 )
-def list_public_quizzes(service: QuizService = Depends(get_quiz_service)):
-    quizzes = service.list_public_quizzes()
+def list_public_quizzes(
+        page: int = Query(1, ge=1),
+        limit: int = Query(10, ge=1, le=100),
+        service: QuizService = Depends(get_quiz_service)
+):
+    quizzes, total = service.list_public_quizzes(page=page, limit=limit)
 
     logger.info(
         "public_quizzes_listed",
-        extra={"count": len(quizzes)}
+        extra={"page": page, "limit": limit, "count": len(quizzes)}
     )
 
-    return QuizzesResponse(
-        quizzes = [QuizOut.model_validate(q) for q in quizzes]
+    return QuizzesResponsePaginated(
+        quizzes = [QuizOut.model_validate(q) for q in quizzes],
+        total=total,
+        page=page,
+        pages=(total + limit - 1) // limit
     )
 
 @router.get(

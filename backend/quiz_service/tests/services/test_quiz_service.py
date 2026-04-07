@@ -14,7 +14,7 @@ def service(mock_repo):
 
 def test_list_public_quizzes(service, mock_repo):
     mock_repo.find_public_quizzes.return_value = [{"quizId": "1", "title": "Public Quiz"}]
-    result = service.list_public_quizzes()
+    result, total = service.list_public_quizzes(1, 1)
     assert len(result) == 1
     assert result[0]["title"] == "Public Quiz"
     mock_repo.find_public_quizzes.assert_called_once()
