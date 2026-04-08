@@ -1,150 +1,50 @@
-import { useState, useEffect, ChangeEvent, useContext } from "react";
-import { useNavigate } from "react-router-dom";
-import { apiFetch } from "../api/api";
-import { AuthContext } from "../auth/AuthProvider";
+import { useHomePage } from "../hooks/useHomePage";
+import { AuthBar } from "../components/home/AuthBar";
+import { JoinRoom } from "../components/home/JoinRoom";
+import { MainActions } from "../components/home/MainActions";
+import { QuizList } from "../components/home/QuizList";
+import { Pagination } from "../components/home/Pagination";
 import "../styles/HomePage.css";
 
-interface Quiz {
-  quizId: string;
-  title: string;
-}
-
-interface QuizzesReponse {
-  quizzes: Quiz[];
-  total: number;
-  page: number;
-  pages: number;
-}
-
 export default function HomePage() {
-  const navigate = useNavigate();
-
-  // Quiz list and room code
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [roomCode, setRoomCode] = useState<string>("");
-  const [page, setPage] = useState<number>(1);
-  const [pages, setPages] = useState<number>(1);
-  const limit = 10;
-  
-  const { keycloak, authenticated } = useContext(AuthContext);
-  const handleLogin = () => keycloak.login();
-  const handleLogout = () => keycloak.logout({ redirectUri: window.location.origin });
-
-  // Load quizzes
-  useEffect(() => {
-    async function loadQuizzes() {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const data: QuizzesReponse = await apiFetch(
-          `http://quiz-service:8001/quizzes/public?page=${page}&limit=${limit}`
-        );
-
-        setQuizzes(data.quizzes || []);
-        setPages(data.pages);
-      } catch (err: any) {
-        setError(err.message || "Error loading quizzes");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadQuizzes();
-  }, [page]);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [page]);
-
-  const handleJoinRoom = () => {
-    if (!roomCode.trim()) {
-      alert("Please enter a valid room code.");
-      return;
-    }
-    navigate(`/room/${roomCode}`);
-  };
-
-  const handleSoloQuiz = (quizId: string) => {
-    navigate(`/solo-quiz/${quizId}`);
-  };
-
-  const handleCreateQuiz = () => {
-    if (!authenticated) {
-      keycloak.login();
-      return;
-    }
-    navigate("/create");
-  }
-  const handleCreateRoom = () => {
-    if (!authenticated) {
-      keycloak.login();
-      return;
-    }
-    navigate("/create-room"); 
-  }
-  const handleRoomCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setRoomCode(e.target.value);
-  };
+  const { state, actions } = useHomePage();
 
   return (
     <div className="home-container">
-      <div className="auth-bar">
-        {!authenticated ? (
-          <button onClick={handleLogin}>Login / Sign Up</button>
-        ) : (
-          <>
-            <span>
-              Welcome {keycloak.tokenParsed?.preferred_username}
-            </span>
-            <button onClick={handleLogout}>Logout</button>
-          </>
-        )}
-      </div>
+      <AuthBar
+        authenticated={state.authenticated}
+        username={state.username}
+        onLogin={actions.login}
+        onLogout={actions.logout}
+      />
+
       <h1>Quiz App</h1>
 
-      {/* Room code input */}
-      <div className="join-room">
-        <input
-          type="text"
-          placeholder="Enter room code"
-          value={roomCode}
-          onChange={(e) => setRoomCode(e.target.value)}
-        />
-        <button onClick={handleJoinRoom}>Join Room</button>
-      </div>
+      <JoinRoom
+        roomCode={state.roomCode}
+        onChange={actions.setRoomCode}
+        onJoin={actions.joinRoom}
+      />
 
-      {/* Main action buttons */}
-      <div className="main-actions">
-        <button onClick={handleCreateQuiz}>Create New Quiz</button>
-        <button onClick={handleCreateRoom}>Create New Room</button>
-        {authenticated && (
-          <button onClick={() => navigate("/my-quizzes")}>My Quizzes</button>
-        )}
-      </div>
+      <MainActions
+        authenticated={state.authenticated}
+        onCreateQuiz={actions.createQuiz}
+        onCreateRoom={actions.createRoom}
+        onMyQuizzes={actions.goToMyQuizzes}
+      />
 
-      {/* Available quizzes list */}
-      <div className="quiz-list-section">
-        <h2>Available Quizzes</h2>
-        {loading && <p>Loading quizzes...</p>}
-        {error && <p className="error">{error}</p>}
-        {!loading && !error && quizzes.length === 0 && <p>No quizzes available.</p>}
-        <ul className="quiz-list">
-          {quizzes.map((quiz) => (
-            <li key={quiz.quizId}>
-              <span>{quiz.title}</span>
-              <button onClick={() => handleSoloQuiz(quiz.quizId)}>Play solo</button>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="pagination">
-        {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-          <button key={p} onClick={() => setPage(p)} className={p === page ? "active" : ""}>{p}</button>
-        ))}
-      </div>
+      <QuizList
+        quizzes={state.quizzes}
+        loading={state.loading}
+        error={state.error}
+        onPlay={actions.playSolo}
+      />
+
+      <Pagination
+        page={state.page}
+        pages={state.pages}
+        onChange={actions.setPage}
+      />
     </div>
   );
 }
