@@ -43,6 +43,12 @@ class QuizOut(BaseModel):
 class QuizzesResponse(BaseModel):
     quizzes: List[QuizOut]
 
+class QuizzesResponsePaginated(BaseModel):
+    quizzes: List[QuizOut]
+    total: int
+    page: int
+    pages: int
+
 class AnswerRequest(BaseModel):
     question_id: str
     answer: str
