@@ -133,6 +133,53 @@
   font-weight: bold;
 }
 
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.pagination span {
+  font-weight: bold;
+  color: #111827;
+}
+
+.pagination button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background-color: #2563eb;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.pagination button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.pagination button.active {
+  background-color: #1d4ed8;
+  box-shadow: 0 0 0 2px #93c5fd;
+}
+
+.pagination-numbers {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 @media (max-width: 500px) {
   .join-room, .main-actions {
     flex-direction: column;
@@ -141,5 +188,14 @@
 
   .join-room input {
     max-width: 100%;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pagination-numbers {
+    justify-content: center;
   }
 }

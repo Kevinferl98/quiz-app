@@ -10,7 +10,10 @@ interface Quiz {
 }
 
 interface QuizzesReponse {
-  quizzes: Quiz[]
+  quizzes: Quiz[];
+  total: number;
+  page: number;
+  pages: number;
 }
 
 export default function HomePage() {
@@ -21,6 +24,9 @@ export default function HomePage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [roomCode, setRoomCode] = useState<string>("");
+  const [page, setPage] = useState<number>(1);
+  const [pages, setPages] = useState<number>(1);
+  const limit = 10;
   
   const { keycloak, authenticated } = useContext(AuthContext);
   const handleLogin = () => keycloak.login();
@@ -31,17 +37,27 @@ export default function HomePage() {
     async function loadQuizzes() {
       setLoading(true);
       setError(null);
+
       try {
-        const data: QuizzesReponse = await apiFetch("http://quiz-service:8001/quizzes/public");
+        const data: QuizzesReponse = await apiFetch(
+          `http://quiz-service:8001/quizzes/public?page=${page}&limit=${limit}`
+        );
+
         setQuizzes(data.quizzes || []);
+        setPages(data.pages);
       } catch (err: any) {
         setError(err.message || "Error loading quizzes");
       } finally {
         setLoading(false);
       }
     }
+
     loadQuizzes();
-  }, []);
+  }, [page]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [page]);
 
   const handleJoinRoom = () => {
     if (!roomCode.trim()) {
@@ -123,6 +139,11 @@ export default function HomePage() {
             </li>
           ))}
         </ul>
+      </div>
+      <div className="pagination">
+        {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
+          <button key={p} onClick={() => setPage(p)} className={p === page ? "active" : ""}>{p}</button>
+        ))}
       </div>
     </div>
   );
