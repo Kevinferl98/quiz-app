@@ -1,3 +1,5 @@
+import "../../styles/home/MainActions.css";
+
 export function MainActions({
     authenticated,
     onCreateQuiz,
@@ -6,11 +8,11 @@ export function MainActions({
 }: any) {
     return (
         <div className="main-actions">
-            <button onClick={onCreateQuiz}>Create New Quiz</button>
-            <button onClick={onCreateRoom}>Create New Room</button>
+            <button className="primary-btn success-btn" onClick={onCreateQuiz}>Create New Quiz</button>
+            <button className="primary-btn success-btn" onClick={onCreateRoom}>Create New Room</button>
 
             {authenticated && (
-                <button onClick={onMyQuizzes}>My Quizzes</button>
+                <button className="primary-btn success-btn" onClick={onMyQuizzes}>My Quizzes</button>
             )}
         </div>
     );

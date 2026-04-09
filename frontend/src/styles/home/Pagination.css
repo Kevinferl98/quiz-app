@@ -1,0 +1,13 @@
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.pagination button.active {
+  background-color: var(--color-primary-dark);
+  box-shadow: 0 0 0 2px #93c5fd;
+}

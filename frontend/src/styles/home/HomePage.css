@@ -1,0 +1,27 @@
+.home-container {
+  max-width: 800px;
+  margin: 32px auto;
+  padding: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  font-family: Arial, sans-serif;
+}
+
+@media (max-width: 500px) {
+  .join-room,
+  .main-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .join-room input {
+    max-width: 100%;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

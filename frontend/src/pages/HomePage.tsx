@@ -4,7 +4,7 @@ import { JoinRoom } from "../components/home/JoinRoom";
 import { MainActions } from "../components/home/MainActions";
 import { QuizList } from "../components/home/QuizList";
 import { Pagination } from "../components/home/Pagination";
-import "../styles/HomePage.css";
+import "../styles/home/HomePage.css";
 
 export default function HomePage() {
   const { state, actions } = useHomePage();

@@ -1,3 +1,5 @@
+import "../../styles/home/QuizList.css";
+
 export function QuizList({ quizzes, loading, error, onPlay }: any) {
     return (
         <div className="quiz-list-section">
@@ -13,7 +15,7 @@ export function QuizList({ quizzes, loading, error, onPlay }: any) {
                 {quizzes.map((quiz: any) => (
                     <li key={quiz.quizId}>
                         <span>{quiz.title}</span>
-                        <button onClick={() => onPlay(quiz.quizId)}>
+                        <button className="primary-btn" onClick={() => onPlay(quiz.quizId)}>
                             Play solos
                         </button>
                     </li>

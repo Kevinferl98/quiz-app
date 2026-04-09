@@ -1,3 +1,5 @@
+import "../../styles/home/Pagination.css";
+
 export function Pagination({ page, pages, onChange }: any) {
     return (
         <div className="pagination">
@@ -5,7 +7,7 @@ export function Pagination({ page, pages, onChange }: any) {
                 <button
                     key={p}
                     onClick={() => onChange(p)}
-                    className={p === page ? "active" : ""}
+                    className={`primary-btn ${p === page ? "active" : ""}`}
                 >
                     {p}
                 </button>

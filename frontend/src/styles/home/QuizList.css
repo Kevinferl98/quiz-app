@@ -1,0 +1,30 @@
+.quiz-list-section {
+  text-align: left;
+}
+
+.quiz-list-section h2 {
+  margin-bottom: 12px;
+  color: var(--text-main);
+}
+
+.quiz-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+
+  background-color: var(--bg-light);
+}
+
+.quiz-list li span {
+  font-weight: 500;
+}
+
+.error {
+  color: var(--color-danger);
+  font-weight: bold;
+}
