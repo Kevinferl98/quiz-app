@@ -1,0 +1,11 @@
+.result-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.result-section p {
+  font-weight: bold;
+  font-size: 1.1rem;
+}

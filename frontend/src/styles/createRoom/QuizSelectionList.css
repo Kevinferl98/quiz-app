@@ -1,0 +1,33 @@
+.quiz-list-section {
+  text-align: left;
+}
+
+.quiz-list-section h2 {
+  margin-bottom: 12px;
+  color: #111827;
+}
+
+.quiz-list {
+  list-style: none;
+  padding: 0;
+}
+
+.quiz-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background-color: #f9fafb;
+}
+
+.quiz-list li span {
+  font-weight: 500;
+}
+
+.error {
+  color: #dc2626;
+  font-weight: bold;
+}

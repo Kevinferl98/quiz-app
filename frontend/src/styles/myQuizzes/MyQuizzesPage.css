@@ -1,0 +1,10 @@
+.home-container {
+  max-width: 800px;
+  margin: 32px auto;
+  padding: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  font-family: Arial, sans-serif;
+}

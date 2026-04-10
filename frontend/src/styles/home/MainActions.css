@@ -1,0 +1,14 @@
+.main-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.primary-btn.success-btn {
+  background-color: var(--color-success);
+}
+
+.primary-btn.success-btn:hover {
+  background-color: var(--color-success-dark);
+}

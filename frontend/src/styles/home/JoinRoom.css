@@ -1,0 +1,11 @@
+.join-room {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.join-room input {
+  flex: 1;
+  max-width: 200px;
+}
