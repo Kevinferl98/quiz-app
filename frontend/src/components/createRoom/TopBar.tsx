@@ -1,4 +1,3 @@
-
 import "../../styles/createRoom/TopBar.css"
 
 interface Props {
