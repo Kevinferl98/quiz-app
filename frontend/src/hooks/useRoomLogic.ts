@@ -167,20 +167,20 @@ export function useRoomLogic() {
 
     // Timer countdown
     useEffect(() => {
-        if (timer <= 0) return;
+        if (!question) return;
 
         const interval = setInterval(() => {
             setTimer((t) => {
-                if (t <= 1) {
+                if (t <= 1 || correctAnswer) {
                     clearInterval(interval);
-                    return 0;
+                    return t;
                 }
                 return t - 1;
             });
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [timer]);
+    }, [question, correctAnswer]);
 
     // Auth auto join
     useEffect(() => {
