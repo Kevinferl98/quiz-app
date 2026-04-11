@@ -2,25 +2,29 @@ import "../../styles/home/QuizList.css";
 
 export function QuizList({ quizzes, loading, error, onPlay }: any) {
     return (
-        <div className="quiz-list-section">
-            <h2>Available Quizzes</h2>
+        <div className="mq-list-wrapper">
+            <h2 className="mq-section-title">Explore Quizzes</h2>
 
-            {loading && <p>Loading quizzes...</p>}
-            {error && <p className="error">{error}</p>}
+            {loading && <div className="mq-loader">Loading...</div>}
+            {error && <div className="mq-error-msg">{error}</div>}
+            
             {!loading && !error && quizzes.length === 0 && (
-                <p>No quizzes available.</p>
+                <div className="mq-empty-state">No quizzes available at the moment.</div>
             )}
 
-            <ul className="quiz-list">
+            <div className="mq-grid-quizzes">
                 {quizzes.map((quiz: any) => (
-                    <li key={quiz.quizId}>
-                        <span>{quiz.title}</span>
-                        <button className="primary-btn" onClick={() => onPlay(quiz.quizId)}>
-                            Play solos
+                    <div key={quiz.quizId} className="mq-quiz-card">
+                        <div className="mq-quiz-info">
+                            <h3>{quiz.title}</h3>
+                            <p></p>
+                        </div>
+                        <button className="mq-btn-play" onClick={() => onPlay(quiz.quizId)}>
+                            Play
                         </button>
-                    </li>
+                    </div>
                 ))}
-            </ul>
+            </div>
         </div>
     );
 }

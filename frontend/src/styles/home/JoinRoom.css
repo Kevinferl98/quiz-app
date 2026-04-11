@@ -1,11 +1,47 @@
-.join-room {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
+.mq-join-card {
+  background: var(--mq-card);
+  padding: 32px;
+  border-radius: var(--mq-radius-lg);
+  box-shadow: var(--mq-shadow);
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-.join-room input {
+.mq-input-group {
+  display: flex;
+  gap: 12px;
+}
+
+.mq-input-main {
   flex: 1;
-  max-width: 200px;
+  padding: 14px 20px;
+  border-radius: var(--mq-radius-md);
+  border: 2px solid var(--mq-border);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: var(--mq-transition);
+}
+
+.mq-input-main:focus {
+  border-color: var(--mq-primary);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+.mq-btn-primary {
+  background: var(--mq-primary);
+  color: white;
+  padding: 0 28px;
+  border-radius: var(--mq-radius-md);
+  font-weight: 700;
+  font-size: 1rem;
+  transition: var(--mq-transition);
+}
+
+.mq-btn-primary:hover {
+  background: var(--mq-primary-dark);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 500px) {
+  .mq-input-group { flex-direction: column; }
 }
