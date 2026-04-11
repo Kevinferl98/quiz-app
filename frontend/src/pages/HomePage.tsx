@@ -22,7 +22,7 @@ export default function HomePage() {
 
       <main className="mq-main">
         <section className="mq-hero">
-          <h1 className="mq-logo">QUIZ<span>MASTER</span></h1>
+          <h1 className="mq-logo">QUIZ<span>PLATFORM</span></h1>
           <p className="mq-lead">Create, challenge, and win in real time.</p>
         </section>
 
