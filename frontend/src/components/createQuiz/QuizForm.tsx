@@ -26,48 +26,64 @@ export function QuizForm({
     onCorrectChange
 }: Props) {
     return (
-        <>
-            <input
-                className="title-input"
-                type="text"
-                placeholder="Quiz Title"
-                value={title}
-                onChange={(e) => onTitleChange(e.target.value)} 
-            />
+        <div className="mq-form-container">
+            <section className="mq-form-section">
+                <label className="mq-label">Quiz Title</label>
+                <input
+                    className="mq-input-title"
+                    type="text"
+                    placeholder="Example: General Knowledge 2026"
+                    value={title}
+                    onChange={(e) => onTitleChange(e.target.value)} 
+                />
+            </section>
 
-            <button className="add-question-button" onClick={onAddQuestion}>
-                Add Question
-            </button>
+            <div className="mq-section-header">
+                <h2 className="mq-section-title">Questions</h2>
+                <button className="mq-btn-add" onClick={onAddQuestion}>
+                    <span>+</span> Add Question
+                </button>
+            </div>
 
-            {questions.map((q, qIdx) => (
-                <div key={qIdx} className="question-card">
-                    <input
-                        className="question-input"
-                        type="text"
-                        placeholder={`Question ${qIdx + 1}`}
-                        value={q.text}
-                        onChange={(e) => onQuestionChange(qIdx, e.target.value)}
-                    />
-
-                    {q.options.map((opt, idx) => (
-                        <div key={idx} className="option-row">
+            <div className="mq-questions-list">
+                {questions.map((q, qIdx) => (
+                    <div key={qIdx} className="mq-question-card">
+                        <div className="mq-question-header">
+                            <span className="mq-question-number">#{qIdx + 1}</span>
                             <input
-                                type="radio"
-                                checked={q.correctIndex === idx}
-                                onChange={() => onCorrectChange(qIdx, idx)}
-                            />
-
-                            <input
-                                className="option-input"
+                                className="mq-input-question"
                                 type="text"
-                                value={opt}
-                                placeholder={`Option ${idx + 1}`}
-                                onChange={(e) => onOptionChange(qIdx, idx, e.target.value)}
+                                placeholder="Enter your question here..."
+                                value={q.text}
+                                onChange={(e) => onQuestionChange(qIdx, e.target.value)}
                             />
                         </div>
-                    ))}
-                </div>
-            ))}
-        </>
+
+                        <div className="mq-options-grid">
+                            {q.options.map((opt, idx) => (
+                                <div key={idx} className={`mq-option-item ${q.correctIndex === idx ? 'is-correct' : ''}`}>
+                                    <label className="mq-radio-container">
+                                        <input
+                                            type="radio"
+                                            name={`correct-${qIdx}`}
+                                            checked={q.correctIndex === idx}
+                                            onChange={() => onCorrectChange(qIdx, idx)}
+                                        />
+                                        <span className="mq-checkmark"></span>
+                                    </label>
+                                    <input
+                                        className="mq-input-option"
+                                        type="text"
+                                        value={opt}
+                                        placeholder={`Option ${idx + 1}`}
+                                        onChange={(e) => onOptionChange(qIdx, idx, e.target.value)}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
     );
 }

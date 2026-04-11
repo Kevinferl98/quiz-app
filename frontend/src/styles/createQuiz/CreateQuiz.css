@@ -1,11 +1,47 @@
-.create-quiz-container {
-  max-width: 700px;
-  margin: 32px auto;
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+.mq-create-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 32px;
+}
+
+.mq-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.mq-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--mq-card);
+  padding: 24px;
+  border-radius: var(--mq-radius-lg);
+  box-shadow: var(--mq-shadow);
+  border: 1px solid var(--mq-border);
+}
+
+.mq-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--mq-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mq-input-title {
+  padding: 16px;
+  border: 2px solid var(--mq-border);
+  border-radius: var(--mq-radius-md);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--mq-text-main);
+  transition: var(--mq-transition);
+}
+
+.mq-input-title:focus {
+  border-color: var(--mq-primary);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
 }
