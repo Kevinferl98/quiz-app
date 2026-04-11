@@ -7,24 +7,29 @@ export default function CreateQuiz() {
   const { state, actions } = useCreateQuiz();
 
   return (
-    <div className="create-quiz-container">
-      <h1>Create New Quiz</h1>
+    <div className="mq-container">
+      <header className="mq-hero">
+        <h1 className="mq-logo">CREATE<span>QUIZ</span></h1>
+        <p className="mq-lead">Design your challenge and share it with the world.</p>
+      </header>
 
-      <QuizForm
-        title={state.title}
-        questions={state.questions}
-        onTitleChange={actions.setTitle}
-        onAddQuestion={actions.addQuestion}
-        onQuestionChange={actions.updateQuestionText}
-        onOptionChange={actions.updateOption}
-        onCorrectChange={actions.setCorrectOption}
-      />      
+      <main className="mq-create-wrapper">
+        <QuizForm
+          title={state.title}
+          questions={state.questions}
+          onTitleChange={actions.setTitle}
+          onAddQuestion={actions.addQuestion}
+          onQuestionChange={actions.updateQuestionText}
+          onOptionChange={actions.updateOption}
+          onCorrectChange={actions.setCorrectOption}
+        />      
 
-      <ActionsButtons
-        onSubmit={actions.submit}
-        onCancel={actions.goHome}
-        disabled={!state.isValid}
-      />
+        <ActionsButtons
+          onSubmit={actions.submit}
+          onCancel={actions.goHome}
+          disabled={!state.isValid}
+        />
+      </main>
     </div>
   );
 }

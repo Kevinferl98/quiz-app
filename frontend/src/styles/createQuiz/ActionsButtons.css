@@ -1,13 +1,45 @@
-.action-buttons {
+.mq-actions-footer {
   display: flex;
-  gap: 12px;
-  margin-top: 16px;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 32px 0;
+  margin-top: 20px;
+  border-top: 2px solid var(--mq-border);
 }
 
-.primary-btn.cancel-btn {
-  background-color: var(--color-danger);
+.mq-btn-secondary-lg {
+  background: transparent;
+  color: var(--mq-text-muted);
+  padding: 16px 32px;
+  border-radius: var(--mq-radius-md);
+  font-weight: 700;
+  transition: var(--mq-transition);
 }
 
-.primary-btn.cancel-btn:hover {
-  background-color: var(--color-danger-dark);
+.mq-btn-secondary-lg:hover {
+  background: rgba(0,0,0,0.05);
+  color: var(--mq-text-main);
+}
+
+.mq-btn-primary-lg {
+  background: var(--mq-primary);
+  color: white;
+  padding: 16px 40px;
+  border-radius: var(--mq-radius-md);
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: var(--mq-transition);
+  box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+}
+
+.mq-btn-primary-lg:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.mq-btn-primary-lg:disabled {
+  background: var(--mq-border);
+  color: var(--mq-text-muted);
+  box-shadow: none;
+  cursor: not-allowed;
 }
