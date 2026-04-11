@@ -26,7 +26,10 @@ export function QuestionBox({
             </div>
             
             <div className="timer-container">
-                <div className="timer-bar" style={{ width: `${progress}%` }} />
+                <div className="timer-bar" style={{ 
+                    width: `${progress}%`,
+                    transition: correctAnswer ? "none" : "width 1s linear" 
+                }} />
                 <div className="timer-text">{timer}s</div>
             </div>
 
