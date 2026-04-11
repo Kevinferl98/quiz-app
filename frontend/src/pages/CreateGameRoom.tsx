@@ -1,28 +1,36 @@
 import { useCreateGameRoom } from "../hooks/useCreateGameRoom";
 import { TopBar } from "../components/createRoom/TopBar";
 import { QuizSelectionList } from "../components/createRoom/QuizSelectionList";
-
 import "../styles/createRoom/CreateGameRoom.css";
 
 export default function CreateGameRoom() {
     const { state, actions } = useCreateGameRoom();
     
     return (
-        <div className="create-room-container">
-            <TopBar
-                onBack={actions.goHome}
-                onLogout={actions.logout}
-            />
+        <div className="mq-container">
+            <header className="mq-header">
+                <TopBar
+                    onBack={actions.goHome}
+                    onLogout={actions.logout}
+                />
+            </header>
 
-            <h1>Create Game Room</h1>
+            <main className="mq-main">
+                <section className="mq-hero">
+                    <h1 className="mq-logo">START<span>GAME</span></h1>
+                    <p className="mq-lead">Choose a quiz and challenge your friends.</p>
+                </section>
 
-            <QuizSelectionList
-                quizzes={state.quizzes}
-                loading={state.loading}
-                error={state.error}
-                creatingRoomId={state.creatingRoomId}
-                onCreateRoom={actions.creteRoom}
-            />
+                <section className="mq-selection-wrapper">
+                    <QuizSelectionList
+                        quizzes={state.quizzes}
+                        loading={state.loading}
+                        error={state.error}
+                        creatingRoomId={state.creatingRoomId}
+                        onCreateRoom={actions.creteRoom}
+                    />
+                </section>
+            </main>
         </div>
     );
 }

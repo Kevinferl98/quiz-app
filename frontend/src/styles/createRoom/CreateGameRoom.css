@@ -1,9 +1,11 @@
-.create-room-container {
-  max-width: 800px;
-  margin: 32px auto;
-  padding: 24px;
+.mq-selection-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.mq-main {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  font-family: Arial, sans-serif;
+  gap: 40px;
 }

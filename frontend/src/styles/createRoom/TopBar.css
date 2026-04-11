@@ -1,5 +1,30 @@
-.top-bar {
+.mq-top-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--mq-border);
+  margin-bottom: 20px;
+}
+
+.mq-btn-back {
+  background: transparent;
+  color: var(--mq-text-muted);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--mq-radius-md);
+  transition: var(--mq-transition);
+}
+
+.mq-btn-back:hover {
+  color: var(--mq-primary);
+  background: rgba(79, 70, 229, 0.05);
+}
+
+.mq-back-icon {
+  font-size: 1.2rem;
+  line-height: 0;
 }
