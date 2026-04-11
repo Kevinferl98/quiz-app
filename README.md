@@ -56,3 +56,31 @@ The system is designed as a distributed set of services:
 **WebSocket Scaling**: NGINX acts as a reverse proxy to handle WebSocket upgrades and maintain persistent connections between the Client and the Game Service.
 
 **CI**: Automated pipeline via GitHub Actions that runs Linter and Unit Tests on every push, ensuring code quality and coverage for the backend.
+
+## Running the Application
+
+### Prerequisites
+- Docker  
+- Docker Compose  
+
+### Setup
+
+1. Create a `.env` file in the project root and configure Keycloak and PostgreSQL credentials:
+   ```env
+   POSTGRES_USER=username
+   POSTGRES_PASSWORD=password
+
+   KEYCLOAK_ADMIN=admin
+   KEYCLOAK_ADMIN_PASSWORD=password
+   ```
+2. Launch the full application:
+   ```bash
+   docker compose up -d
+   ```
+Once running, the web interface will be available at: **http://localhost:8080**
+
+## Using the Application
+
+<p align="center">
+<img src="docs/Home page.png" alt="home page" width="80%"/>
+</p>
