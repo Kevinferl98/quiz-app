@@ -81,6 +81,12 @@ Once running, the web interface will be available at: **http://localhost:8080**
 
 ## Using the Application
 
+Start by creating a new quiz room or joining an existing one using a room code. Once inside, participants are automatically connected through a WebSocket session that keeps the game state synchronized in real time.
+
+When the host starts the quiz, questions are broadcast simultaneously to all connected players. Each participant can select an answer, and the system immediately processes and updates responses across all clients without requiring page refreshes.
+
+This demo showcases real-time multiplayer synchronization, where both question delivery and score updates are handled instantly.
+
 <p align="center">
-<img src="docs/Home page.png" alt="home page" width="80%"/>
+<img src="docs/game-room.gif" alt="game room" width="80%"/>
 </p>
