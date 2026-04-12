@@ -1,27 +1,21 @@
 import logging
 import logging.config
 from app.config import config
+from app.logging.json_formatter import JsonFormatter
 
 LOGGING_CONFIG = {
     "version": 1,
     "disable_existing_loggers": False,
 
     "formatters": {
-        "default": {
-            "format": "[%(asctime)s] %(levelname)s in %(name)s: %(message)s"
-        },
-        "detailed": {
-            "format": (
-                "[%(asctime)s] %(levelname)s "
-                "[%(process)d:%(threadName)s] "
-                "%(name)s: %(message)s"
-            )
-        },
+        "json": {
+            "()": JsonFormatter,
+        }
     },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "formatter": "default",
+            "formatter": "json",
             "level": config.LOG_LEVEL
         }
     },
@@ -34,8 +28,16 @@ LOGGING_CONFIG = {
     "loggers": {
         "pymongo": {
             "level": "WARNING",
-            "handlers": ["console"],
             "propagate": False
+        },
+        "uvicorn": {
+            "level": "INFO"
+        },
+        "uvicorn.error": {
+            "level": "INFO"
+        },
+        "uvicorn.access": {
+            "level": "WARNING"
         }
     }
 }

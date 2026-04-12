@@ -52,13 +52,13 @@ def test_count_public_quizzes_error(repository, mock_collection):
 
 def test_find_by_owner_success(repository, mock_collection):
     mock_collection.find.return_value = [
-        {"quizId": "1", "ownerId": "user1"}
+        {"quizId": "1", "owner_id": "user1"}
     ]
 
     result = repository.find_by_owner("user1")
 
-    assert result == [{"quizId": "1", "ownerId": "user1"}]
-    mock_collection.find.assert_called_once_with({"ownerId": "user1"})
+    assert result == [{"quizId": "1", "owner_id": "user1"}]
+    mock_collection.find.assert_called_once_with({"owner_id": "user1"}, {'_id': 0})
 
 def test_find_by_owner_error(repository, mock_collection):
     mock_collection.find.side_effect = PyMongoError("DB error")

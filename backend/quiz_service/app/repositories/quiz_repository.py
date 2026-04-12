@@ -31,7 +31,7 @@ class QuizRepository:
 
     def find_by_owner(self, owner_id: str) -> list[Dict[str, Any]]:
         try:
-            return list(self.collection.find({"ownerId": owner_id}))
+            return list(self.collection.find({"owner_id": owner_id}, {"_id": 0}))
         except PyMongoError as e:
             raise DatabaseError("Error fetching user quizzes") from e
 
