@@ -10,41 +10,56 @@ export default function HomePage() {
   const { state, actions } = useHomePage();
 
   return (
-    <div className="home-container">
-      <AuthBar
-        authenticated={state.authenticated}
-        username={state.username}
-        onLogin={actions.login}
-        onLogout={actions.logout}
-      />
+    <div className="mq-container">
+      <header className="mq-header">
+        <AuthBar
+          authenticated={state.authenticated}
+          username={state.username}
+          onLogin={actions.login}
+          onLogout={actions.logout}
+        />
+      </header>
 
-      <h1>Quiz App</h1>
+      <main className="mq-main">
+        <section className="mq-hero">
+          <h1 className="mq-logo">QUIZ<span>PLATFORM</span></h1>
+          <p className="mq-lead">Create, challenge, and win in real time.</p>
+        </section>
 
-      <JoinRoom
-        roomCode={state.roomCode}
-        onChange={actions.setRoomCode}
-        onJoin={actions.joinRoom}
-      />
+        <section className="mq-section-join">
+          <JoinRoom
+            roomCode={state.roomCode}
+            onChange={actions.setRoomCode}
+            onJoin={actions.joinRoom}
+          />
+        </section>
 
-      <MainActions
-        authenticated={state.authenticated}
-        onCreateQuiz={actions.createQuiz}
-        onCreateRoom={actions.createRoom}
-        onMyQuizzes={actions.goToMyQuizzes}
-      />
+        <section className="mq-section-actions">
+          <MainActions
+            authenticated={state.authenticated}
+            onCreateQuiz={actions.createQuiz}
+            onCreateRoom={actions.createRoom}
+            onMyQuizzes={actions.goToMyQuizzes}
+          />
+        </section>
 
-      <QuizList
-        quizzes={state.quizzes}
-        loading={state.loading}
-        error={state.error}
-        onPlay={actions.playSolo}
-      />
+        <section className="mq-section-list">
+          <QuizList
+            quizzes={state.quizzes}
+            loading={state.loading}
+            error={state.error}
+            onPlay={actions.playSolo}
+          />
+        </section>
 
-      <Pagination
-        page={state.page}
-        pages={state.pages}
-        onChange={actions.setPage}
-      />
+        <footer className="mq-footer">
+          <Pagination
+            page={state.page}
+            pages={state.pages}
+            onChange={actions.setPage}
+          />
+        </footer>
+      </main>
     </div>
   );
 }

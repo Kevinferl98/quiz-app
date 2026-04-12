@@ -10,32 +10,33 @@ export default function SoloQuizPage() {
 
     if (state.loading)
         return (
-            <div className="quiz-container">
-                <h2>Loading quiz...</h2>
+            <div className="mq-container mq-flex-center">
+                <div className="mq-loader"></div>
+                <h2 className="mq-loading-text">Loading quiz...</h2>
             </div>
         );
 
     if (state.error || !state.quiz)
         return (
-            <div className="quiz-container">
-                <h2>{state.error || "Quiz not found"}</h2>
-                <button
-                    className="primary-btn"
-                    onClick={actions.goHome}
-                >
-                    Back
-                </button>
+            <div className="mq-container mq-flex-center">
+                <div className="mq-error-card">
+                    <h2>Oops!</h2>
+                    <p>{state.error || "Quiz not found"}</p>
+                    <button className="mq-btn-primary" onClick={actions.goHome}>
+                        Go back home
+                    </button>
+                </div>
             </div>
         );
 
     return (
-        <div className="quiz-container">
+        <div className="mq-quiz-layout">
             <QuizTopBar
                 title={state.quiz.title}
                 onBack={actions.goHome}
             />
 
-            <main className="questions-container">
+            <main className="mq-quiz-main">
                 <QuestionCard
                     question={state.currentQuestion!}
                     index={state.currentIndex}
@@ -49,9 +50,7 @@ export default function SoloQuizPage() {
                 {state.showResult && (
                     <ResultSection
                         isCorrect={state.isCorrect}
-                        isLast={
-                            state.currentIndex === state.quiz.questions.length - 1
-                        }
+                        isLast={state.currentIndex === state.quiz.questions.length - 1}
                         onNext={actions.next}
                     />
                 )}

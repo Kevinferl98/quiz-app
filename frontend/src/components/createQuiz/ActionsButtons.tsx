@@ -12,18 +12,18 @@ export function ActionsButtons({
     disabled
 }: Props) {
     return (
-        <div className="action-buttons">
+        <div className="mq-actions-footer">
+            <button className="mq-btn-secondary-lg" onClick={onCancel}>
+                Cancel
+            </button>
+            
             <button
-                className="primary-btn"
+                className="mq-btn-primary-lg"
                 onClick={onSubmit}
                 disabled={disabled}
-                title={disabled ? "Fill all fields before submitting" : "Create quiz"}
+                title={disabled ? "Please fill in all fields before continuing" : "Create quiz"}
             >
-                Create
-            </button>
-
-            <button className="primary-btn cancel-btn" onClick={onCancel}>
-                Cancel
+                Crete Quiz
             </button>
         </div>
     );

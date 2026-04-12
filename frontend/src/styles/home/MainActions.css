@@ -1,14 +1,32 @@
-.main-actions {
+.mq-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.mq-action-card {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  padding: 24px;
+  background: var(--mq-card);
+  border-radius: var(--mq-radius-lg);
+  border: 1px solid var(--mq-border);
+  transition: var(--mq-transition);
+  font-size: 1rem;
+  font-weight: 700;
 }
 
-.primary-btn.success-btn {
-  background-color: var(--color-success);
+.mq-action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
 }
 
-.primary-btn.success-btn:hover {
-  background-color: var(--color-success-dark);
+.mq-icon {
+  font-size: 2rem;
 }
+
+.mq-action-card.create { color: var(--mq-primary); }
+.mq-action-card.room { color: var(--mq-success); }
+.mq-action-card.profile { color: var(--mq-warning); }

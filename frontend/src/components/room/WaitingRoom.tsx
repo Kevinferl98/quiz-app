@@ -8,36 +8,47 @@ interface WaitingRoomProps {
 
 export function WaitingRoom({ players, role, onStart }: WaitingRoomProps) {
     return (
-        <div className="waiting-room">
-            <h2 className="waiting-title">Waiting Room</h2>
-            <p className="waiting-subtitle">
-                {players.length} player{players.length !== 1 && "s"} joined
-            </p>
+        <div className="mq-waiting-container">
+            <div className="mq-waiting-header">
+                <h2 className="mq-waiting-title">Waiting Room</h2>
+                <div className="mq-player-count">
+                    <strong>{players.length}</strong> players joined
+                </div>
+            </div>
 
-            <div className="players-grid">
+            <div className="mq-players-grid">
                 {players.map((p, i) => (
-                    <div key={i} className="player-card">
-                        <div className="player-avatar">
+                    <div key={i} className="mq-player-pill">
+                        <div className="mq-avatar-circle">
                             {p.charAt(0).toUpperCase()}
                         </div>
-                        <div className="player-info">
-                            <span className="player-name">{p}</span>
+                        <div className="mq-player-details">
+                            <span className="mq-p-name">{p}</span>
                             {role === "host" && i === 0 && (
-                                <span className="host-badge">HOST</span>
+                                <span className="mq-host-tag">HOST</span>
                             )}
                         </div>
-                        <div className="online-dot" />
+                        <div className="mq-status-dot active" />
                     </div>
                 ))}
             </div>
 
-            {role === "host" && (
-                <button 
-                    className="primary-btn start-btn big-start" 
-                    onClick={onStart}
-                >
-                    Start Quiz
-                </button>
+            {role === "host" ? (
+                <div className="mq-host-actions">
+                    <button 
+                        className="mq-btn-primary-lg mq-btn-full-width" 
+                        onClick={onStart}
+                        disabled={players.length === 0}
+                    >
+                        🚀 Launch Quiz Now
+                    </button>
+                    <p className="mq-host-hint">Only you can start the game as the host</p>
+                </div>
+            ) : (
+                <div className="mq-player-waiting-msg">
+                    <div className="mq-loader-dots"><span></span><span></span><span></span></div>
+                    <p>Waiting for the host to start the game...</p>
+                </div>
             )}
         </div>
     );

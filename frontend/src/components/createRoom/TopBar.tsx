@@ -7,12 +7,12 @@ interface Props {
 
 export function TopBar({ onBack, onLogout } : Props) {
     return (
-        <div className="top-bar">
-            <button className="primary-btn" onClick={onBack}>
-                ← Back to Home
+        <div className="mq-top-bar">
+            <button className="mq-btn-back" onClick={onBack}>
+                <span className="mq-back-icon">←</span> Back to Home
             </button>
 
-            <button className="primary-btn" onClick={onLogout}>
+            <button className="mq-btn-danger-sm" onClick={onLogout}>
                 Logout
             </button>
         </div>

@@ -25,30 +25,40 @@ export function QuestionCard({
   onSelect,
 }: Props) {
   return (
-    <div className="question-block">
-      <p className="question-counter">
-        Question {index + 1} / {total}
-      </p>
+    <div className="mq-question-container">
+      <div className="mq-question-progress">
+        <span className="mq-progress-text">Question {index + 1} of {total}</span>
+        <div className="mq-progress-bar">
+          <div 
+            className="mq-progress-fill" 
+            style={{ width: `${((index + 1) / total) * 100}%` }}
+          ></div>
+        </div>
+      </div>
 
-      <p className="question-text">
+      <h2 className="mq-question-display">
         {question.question_text}
-      </p>
+      </h2>
 
-      <div className="options-container">
+      <div className="mq-options-layout">
         {question.options.map((option, idx) => {
-          let className = "option-button";
-
+          let stateClass = "";
           if (showResult && option === selectedOption) {
-            className += isCorrect ? " correct" : " wrong";
+            stateClass = isCorrect ? " is-correct" : " is-wrong";
+          } else if (showResult && option !== selectedOption) {
+            stateClass = " is-dimmed";
+          } else if (option === selectedOption) {
+            stateClass = " is-selected";
           }
 
           return (
             <button
               key={idx}
-              className={className}
+              className={`mq-option-btn${stateClass}`}
               onClick={() => onSelect(option)}
               disabled={showResult}
             >
+              <span className="mq-option-letter">{String.fromCharCode(65 + idx)}</span>
               {option}
             </button>
           );
