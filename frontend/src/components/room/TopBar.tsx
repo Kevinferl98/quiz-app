@@ -7,14 +7,14 @@ interface TopBarProps {
 
 export function TopBar({ roomId, onBack }: TopBarProps) {
     return (
-        <div className="top-bar">
-            <button className="primary-btn" onClick={onBack}>
-                Back to Home
+        <header className="mq-room-topbar">
+            <button className="mq-btn-back-minimal" onClick={onBack}>
+                ← Back to Dashboard
             </button>
-            <div className="room-id-box">
-                <span className="room-id-label">Room Code</span>
-                <span className="room-id-value">{roomId}</span>
+            <div className="mq-room-badge">
+                <span className="mq-badge-label">ROOM CODE</span>
+                <span className="mq-badge-value">{roomId}</span>
             </div>
-        </div>
+        </header>
     );
 }
