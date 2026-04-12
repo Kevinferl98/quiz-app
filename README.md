@@ -88,5 +88,5 @@ When the host starts the quiz, questions are broadcast simultaneously to all con
 This demo showcases real-time multiplayer synchronization, where both question delivery and score updates are handled instantly.
 
 <p align="center">
-<img src="docs/game-room.gif" alt="game room" width="80%"/>
+<img src="docs/game-room.gif" alt="game room" width="100%"/>
 </p>
