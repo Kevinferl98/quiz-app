@@ -20,36 +20,39 @@ export function QuestionBox({
     const progress = (timer / totalTime) * 100;
 
     return (
-        <div className="question-box">
-            <div className="question-header">
-                <h2 className="question-text">{question.question_text}</h2>
+        <div className="mq-question-box-card">
+            <div className="mq-question-header-row">
+                 <h2 className="mq-question-text-live">{question.question_text}</h2>
             </div>
             
-            <div className="timer-container">
-                <div className="timer-bar" style={{ 
-                    width: `${progress}%`,
-                    transition: correctAnswer ? "none" : "width 1s linear" 
-                }} />
-                <div className="timer-text">{timer}s</div>
+            <div className="mq-timer-wrapper">
+                <div className="mq-timer-track">
+                    <div className="mq-timer-fill" style={{ 
+                        width: `${progress}%`,
+                        transition: correctAnswer ? "none" : "width 1s linear" 
+                    }} />
+                </div>
+                <div className="mq-timer-badge">{timer}s</div>
             </div>
 
-            <div className="options">
+            <div className="mq-options-grid-live">
                 {question.options.map((opt: string, i: number) => {
-                    let className = "option-btn";
-
-                    if (selectedAnswer === opt) className += " selected";
+                    let stateClass = "";
+                    if (selectedAnswer === opt) stateClass = " is-selected";
                     if (correctAnswer) {
-                        if (opt === correctAnswer) className += " correct";
-                        else if (opt === selectedAnswer) className += " wrong";
+                        if (opt === correctAnswer) stateClass = " is-correct";
+                        else if (opt === selectedAnswer) stateClass = " is-wrong";
+                        else stateClass = " is-dimmed";
                     }
 
                     return (
                         <button
                             key={i}
-                            className={className}
+                            className={`mq-option-btn-live${stateClass}`}
                             onClick={() => onAnswer(opt)}
                             disabled={!!selectedAnswer}
                         >
+                            <span className="mq-option-index">{String.fromCharCode(65 + i)}</span>
                             {opt}
                         </button>
                     );

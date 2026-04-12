@@ -9,31 +9,30 @@ export default function RoomPage() {
     const { state, actions } = useRoomLogic();
     const {
         room_id, role, players, question, timer, leaderboard,
-        nameInput, nameSubmitted, selectedAnswer,
-        correctAnswer, isFinalLeaderboard, totalTime, authenticated, viewState
+        nameInput, selectedAnswer,
+        correctAnswer, totalTime, viewState
     } = state;
 
     const renderContent = () => {
         switch (viewState) {
             case "ENTER_NAME":
                 return (
-                    <>
-                        <h2>Enter your name to join</h2>
-                        <input
-                            type="text"
-                            placeholder="Your name"
-                            value={nameInput}
-                            onChange={(e) =>
-                                actions.setNameInput(e.target.value)
-                            }
-                        />
-                        <button
-                            className="primary-btn"
-                            onClick={actions.handleSubmitName}
-                        >
-                            Join Room
-                        </button>
-                    </>
+                    <div className="mq-join-container">
+                        <div className="mq-join-card-static">
+                            <h2 className="mq-section-title-center">Join the Challenge</h2>
+                            <p className="mq-text-muted-center">Enter your nickname to enter the room</p>
+                            <input
+                                className="mq-input-join"
+                                type="text"
+                                placeholder="Your Awesome Nickname"
+                                value={nameInput}
+                                onChange={(e) => actions.setNameInput(e.target.value)}
+                            />
+                            <button className="mq-btn-primary-full" onClick={actions.handleSubmitName}>
+                                Join Room
+                            </button>
+                        </div>
+                    </div>
                 );
 
             case "WAITING":
@@ -67,13 +66,16 @@ export default function RoomPage() {
 
             case "FINISHED":
                 return (
-                    <>
+                    <div className="mq-finished-container">
                         <LeaderboardView
                             leaderboard={leaderboard}
                             isFinal={true}
                         />
-                        <h2 className="game-ended-title">Game Finished!</h2>
-                    </>
+                        <div className="mq-end-actions">
+                             <h2 className="mq-game-ended-text">The Game has Finished!</h2>
+                             <button className="mq-btn-outline-full" onClick={actions.disconnectAndGoHome}>Return to Dashboard</button>
+                        </div>
+                    </div>
                 );
 
             default:
@@ -82,10 +84,11 @@ export default function RoomPage() {
     };
 
     return (
-        <div className="room-container">
+        <div className="mq-room-layout">
             <TopBar roomId={room_id} onBack={actions.disconnectAndGoHome} />
-
-            {renderContent()}
+            <main className="mq-room-main-content">
+                {renderContent()}
+            </main>
         </div>
     )
 }
