@@ -7,10 +7,10 @@ interface Props {
 
 export function QuizFooter({ score, total }: Props) {
   return (
-    <footer className="quiz-footer">
-      <p>
-        Score: {score} / {total}
-      </p>
+    <footer className="mq-quiz-stats-footer">
+      <div className="mq-score-pill">
+        Current Score: <strong>{score}</strong> <span className="mq-divider">/</span> {total}
+      </div>
     </footer>
   );
 }
