@@ -6,18 +6,18 @@ interface Props {
   onNext: () => void;
 }
 
-export function ResultSection({
-  isCorrect,
-  isLast,
-  onNext,
-}: Props) {
+export function ResultSection({ isCorrect, isLast, onNext }: Props) {
   return (
-    <div className="result-section">
-      <p>{isCorrect ? "Correct!" : "Wrong!"}</p>
-
-      <button className="primary-btn" onClick={onNext}>
-        {isLast ? "Finish" : "Continue"}
-      </button>
+    <div className={`mq-result-banner ${isCorrect ? 'success' : 'error'}`}>
+      <div className="mq-result-content">
+        <div className="mq-result-text">
+            <span className="mq-result-icon">{isCorrect ? '✨' : '⚠️'}</span>
+            <p>{isCorrect ? "Correct Answer!" : "Oops, that wasn't correct!"}</p>
+        </div>
+        <button className="mq-btn-next" onClick={onNext}>
+          {isLast ? "View Results" : "Next Question"}
+        </button>
+      </div>
     </div>
   );
 }

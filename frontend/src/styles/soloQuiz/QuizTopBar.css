@@ -1,11 +1,36 @@
-.quiz-topbar {
+.mq-quiz-top {
+  background: var(--mq-card);
+  padding: 16px 24px;
+  border-radius: var(--mq-radius-md);
+  box-shadow: var(--mq-shadow);
+  border: 1px solid var(--mq-border);
+}
+
+.mq-quiz-top-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.quiz-title {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #111827;
+.mq-quiz-nav-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--mq-primary);
+  margin: 0;
 }
+
+.mq-btn-back-minimal {
+  background: transparent;
+  color: var(--mq-text-muted);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--mq-transition);
+}
+
+.mq-btn-back-minimal:hover {
+  color: var(--mq-danger);
+}
+
+.mq-top-spacer { width: 80px; }
