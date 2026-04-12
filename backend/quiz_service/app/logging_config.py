@@ -29,6 +29,14 @@ LOGGING_CONFIG = {
     "root": {
         "level": config.LOG_LEVEL,
         "handlers": ["console"]
+    },
+
+    "loggers": {
+        "pymongo": {
+            "level": "WARNING",
+            "handlers": ["console"],
+            "propagate": False
+        }
     }
 }
 
