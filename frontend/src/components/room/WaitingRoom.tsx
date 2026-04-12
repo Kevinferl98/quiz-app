@@ -40,7 +40,7 @@ export function WaitingRoom({ players, role, onStart }: WaitingRoomProps) {
                         onClick={onStart}
                         disabled={players.length === 0}
                     >
-                        🚀 Launch Quiz Now
+                        Launch Quiz Now
                     </button>
                     <p className="mq-host-hint">Only you can start the game as the host</p>
                 </div>
