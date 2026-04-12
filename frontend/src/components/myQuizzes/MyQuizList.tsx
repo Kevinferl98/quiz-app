@@ -21,37 +21,50 @@ export function MyQuizList({
     onDelete
 }: Props) {
     return (
-        <>
-            {loading && <p>Loading your quizzes...</p>}
-            {error && <p className="error">{error}</p>}
+        <div className="mq-list-container">
+            {loading && (
+                <div className="mq-loader-wrapper">
+                    <div className="mq-loader"></div>
+                    <p>Loading your quizzes...</p>
+                </div>
+            )}
+            
+            {error && <div className="mq-error-banner">{error}</div>}
 
-            {!loading && quizzes.length === 0 && (
-                <p>You haven't created any quizzes yet.</p>
+            {!loading && !error && quizzes.length === 0 && (
+                <div className="mq-empty-state">
+                    <span className="mq-empty-icon">📝</span>
+                    <p>You haven't created any quizzes yet.</p>
+                </div>
             )}
 
-            <ul className="quiz-list">
+            <div className="mq-quiz-grid">
                 {quizzes.map((quiz) => (
-                    <li key={quiz.quizId}>
-                        <span>{quiz.title}</span>
+                    <div key={quiz.quizId} className="mq-quiz-card-manage">
+                        <div className="mq-quiz-card-content">
+                            <h3>{quiz.title}</h3>
+                            <p className="mq-quiz-stats">Public Quiz</p>
+                        </div>
 
-                        <div className="actions">
+                        <div className="mq-card-actions">
                             <button
-                                className="primary-btn"
+                                className="mq-btn-action play"
                                 onClick={() => onPlay(quiz.quizId)}
                             >
-                                Paly solo
+                                Play
                             </button>
 
                             <button
-                                className="primary-btn danger-btn"
+                                className="mq-btn-action-danger"
                                 onClick={() => onDelete(quiz.quizId)}
+                                title="Delete Quiz"
                             >
-                                Delete
+                                <span className="mq-icon-trash">🗑️</span>
                             </button>
                         </div>
-                    </li>
+                    </div>
                 ))}
-            </ul>
-        </>
+            </div>
+        </div>
     );
 }

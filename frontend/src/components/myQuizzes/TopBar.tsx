@@ -8,12 +8,16 @@ interface Props {
 
 export function TopBar({ username, onBack, onLogout }: Props) {
     return (
-        <div className="top-bar">
-            <button className="primary-btn" onClick={onBack}>← Back to Home</button>
+        <div className="mq-top-bar">
+            <button className="mq-btn-back-minimal" onClick={onBack}>
+                <span className="mq-icon-sm">←</span> Home
+            </button>
 
-            <div className="auth-section">
-                <span>Welcome {username}</span>
-                <button className="primary-btn" onClick={onLogout}>Logout</button>
+            <div className="mq-user-section">
+                <div className="mq-user-info">
+                    <span className="mq-welcome">Account: <strong>{username}</strong></span>
+                </div>
+                <button className="mq-btn-danger-sm" onClick={onLogout}>Logout</button>
             </div>
         </div>
     );
