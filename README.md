@@ -85,7 +85,7 @@ Start by creating a new quiz room or joining an existing one using a room code. 
 
 When the host starts the quiz, questions are broadcast simultaneously to all connected players. Each participant can select an answer, and the system immediately processes and updates responses across all clients without requiring page refreshes.
 
-This demo showcases real-time multiplayer synchronization, where both question delivery and score updates are handled instantly.
+This demo showcases real-time multiplayer synchronization, where both question delivery are handled instantly.
 
 <p align="center">
 <img src="docs/game-room.gif" alt="game room" width="100%"/>
