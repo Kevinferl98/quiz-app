@@ -1,12 +1,36 @@
-.top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
+.mq-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--mq-border);
 }
 
-.auth-section {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.mq-user-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.mq-welcome {
+  font-size: 0.95rem;
+  color: var(--mq-text-muted);
+}
+
+.mq-welcome strong {
+  color: var(--mq-text-main);
+}
+
+.mq-btn-back-minimal {
+  background: transparent;
+  color: var(--mq-text-muted);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: var(--mq-transition);
+}
+
+.mq-btn-back-minimal:hover {
+  color: var(--mq-primary);
 }
