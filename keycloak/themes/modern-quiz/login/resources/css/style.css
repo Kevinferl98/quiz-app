@@ -1,0 +1,259 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+/* VARIABLES */
+:root {
+  --mq-primary: #4f46e5;
+  --mq-primary-hover: #4338ca;
+  --mq-bg: #f8fafc;
+  --mq-text: #0f172a;
+  --mq-border: #e2e8f0;
+}
+
+/* BODY RESET (Removes Keycloak background) */
+.login-pf body {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  height: 100vh !important;
+  margin: 0 !important;
+
+  font-family: 'Inter', sans-serif !important;
+
+  background: var(--mq-bg) !important;
+  background-image: none !important; /* removes geometric background */
+}
+
+/* CONTAINER & HEADER CLEANUP */
+#kc-container-wrapper {
+  background: transparent !important;
+}
+
+#kc-header,
+.login-pf .mq-header {
+  display: none !important; /* hides original header */
+}
+
+/* QUIZ Title */
+#kc-header-wrapper {
+  display: block !important;
+
+  font-size: 2.5rem !important;
+  font-weight: 900 !important;
+  letter-spacing: -1px !important;
+  text-transform: uppercase !important;
+
+  color: var(--mq-primary) !important;
+  text-align: center !important;
+
+  margin-top: 0 !important;
+  margin-bottom: 20px !important;
+  padding-top: 60px !important; /* prevents top clipping */
+
+  background: transparent !important;
+  border: none !important;
+}
+
+/* LOGIN CARD */
+#kc-content-wrapper {
+  width: 100% !important;
+  max-width: 450px !important;
+
+  padding: 40px !important;
+  margin-top: 0 !important;
+  margin-bottom: 50px !important;
+
+  background: white !important;
+  border: 1px solid var(--mq-border) !important;
+  border-radius: 16px !important;
+
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Removes PatternFly layers */
+.card-pf {
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* FORM ELEMENTS */
+label {
+  display: block;
+
+  margin-bottom: 8px !important;
+
+  font-weight: 600 !important;
+  color: #475569 !important;
+}
+
+.form-control {
+  height: 48px !important;
+  padding: 10px 16px !important;
+
+  font-size: 1rem !important;
+
+  background-color: #ffffff !important;
+  border: 1px solid var(--mq-border) !important;
+  border-radius: 8px !important;
+
+  box-shadow: none !important;
+}
+
+.form-control:focus {
+  outline: none !important;
+  border-color: var(--mq-primary) !important;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1) !important;
+}
+
+/* LOGIN BUTTON */
+#kc-login {
+  width: 100% !important;
+  height: 50px !important;
+
+  margin-top: 15px !important;
+
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+
+  color: white !important;
+
+  background: var(--mq-primary) !important;
+  background-image: none !important;
+  border: none !important;
+  border-radius: 8px !important;
+
+  text-shadow: none !important;
+
+  cursor: pointer;
+  transition: all 0.2s ease !important;
+}
+
+#kc-login:hover {
+  background: var(--mq-primary-hover) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2) !important;
+}
+
+/* FOOTER LINKS */
+#kc-info-wrapper,
+#kc-form-options {
+  margin-top: 20px !important;
+  text-align: center !important;
+}
+
+#kc-registration a,
+#kc-forgot-password a,
+.login-pf-settings-area a {
+  font-weight: 700 !important;
+  text-decoration: none !important;
+  color: var(--mq-primary) !important;
+}
+
+#kc-registration a:hover {
+  text-decoration: underline !important;
+}
+
+/* Signup text */
+.login-pf-signup {
+  font-size: 0.95rem !important;
+  color: #64748b !important;
+}
+
+/* REGISTER PAGE */
+
+/* Required field asterisks */
+.required {
+  margin-left: 2px;
+
+  font-size: 1.2rem;
+  color: var(--mq-danger, #ef4444) !important;
+}
+
+/* Form spacing */
+.form-group {
+  margin-bottom: 16px !important;
+}
+
+.login-pf-settings-area {
+  margin-bottom: 20px !important;
+}
+
+/* Register input fields */
+#kc-register-form .form-control {
+  background-color: #ffffff !important;
+  border: 1px solid var(--mq-border) !important;
+  transition: all 0.2s ease;
+}
+
+/* Register button */
+#kc-register-form input[type="submit"] {
+  width: 100% !important;
+  height: 48px !important;
+
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+
+  background: var(--mq-primary) !important;
+  border: none !important;
+  border-radius: 8px !important;
+
+  cursor: pointer;
+  transition: var(--mq-transition) !important;
+}
+
+#kc-register-form input[type="submit"]:hover {
+  background: var(--mq-primary-hover) !important;
+  transform: translateY(-1px);
+}
+
+/* Back to login link */
+#kc-form-options + div,
+#kc-register-form + div,
+.mq-back-to-login {
+  margin-top: 16px !important;
+  text-align: center;
+}
+
+#kc-register-form a {
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  color: var(--mq-primary) !important;
+}
+
+#kc-register-form a:hover {
+  text-decoration: underline !important;
+}
+
+/* RESPONSIVE (height handling) */
+@media (max-height: 800px) {
+  body {
+    height: auto !important;
+    padding: 40px 0 !important;
+    align-items: flex-start !important;
+  }
+}
+
+/* GLOBAL KEYCLOAK FIXES */
+
+/* Removes global backgrounds */
+.login-pf,
+.login-pf body,
+#kc-container-wrapper,
+#kc-header,
+#kc-content,
+#kc-content-wrapper {
+  background-color: var(--mq-bg) !important;
+  background-image: none !important;
+}
+
+/* Removes PatternFly dark overlays */
+div.pf-c-page__header,
+div.pf-c-page__main,
+.login-pf:before {
+  background-color: transparent !important;
+  background-image: none !important;
+}

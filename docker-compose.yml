@@ -58,6 +58,7 @@ services:
       - "8081:8080"
     volumes:
       - ./keycloak/quiz-realm.json:/opt/keycloak/data/import/quiz-realm.json:ro
+      - ./keycloak/themes/modern-quiz:/opt/keycloak/themes/modern-quiz:ro
     depends_on:
       postgres: 
         condition: service_healthy
