@@ -19,7 +19,7 @@ A real-time multiplayer quiz platform where users can create, join, and compete 
 
 ## Architecture Diagram
 <p align="center">
-    <img src="docs/Architecture.jpg" alt="Architecture" width="80%"/>
+    <img src="docs/Architecture.svg" alt="Architecture" width="80%"/>
 </p>
 
 The system is designed as a distributed set of services:
