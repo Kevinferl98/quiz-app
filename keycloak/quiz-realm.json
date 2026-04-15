@@ -1,6 +1,7 @@
 {
   "realm": "quiz",
   "enabled": true,
+  "loginTheme": "modern-quiz",
   "registrationAllowed": true,
   "registrationEmailAsUsername": false,
   "loginWithEmailAllowed": false,
