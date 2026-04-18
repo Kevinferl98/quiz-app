@@ -61,7 +61,7 @@ The system is designed as a distributed set of services:
 
 ### Prerequisites
 - Docker
-- Docker Compose  
+- Docker Compose
 
 ### Setup
 
