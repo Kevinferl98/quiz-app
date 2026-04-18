@@ -60,7 +60,7 @@ The system is designed as a distributed set of services:
 ## Running the Application
 
 ### Prerequisites
-- Docker  
+- Docker
 - Docker Compose  
 
 ### Setup
