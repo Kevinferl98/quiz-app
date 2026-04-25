@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../auth/AuthProvider";
+import { CONFIG } from "../config";
 
 type Role = "host" | "player";
 
@@ -145,7 +146,8 @@ export function useRoomLogic() {
         if (!room_id) return;
 
         const tokenQuery = authenticated && keycloak.token ? `?token=${keycloak.token}` : "";
-        const ws = new WebSocket(`ws://nginx-lb:8082/ws/rooms/${room_id}${tokenQuery}`);
+        const wsUrl = `${CONFIG.WS_BASE}/rooms/${room_id}${tokenQuery}`;
+        const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 
         ws.onopen = () => {

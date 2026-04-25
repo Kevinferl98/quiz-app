@@ -6,7 +6,7 @@ from app.dependencies import get_redis_client
 import logging
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/quizzes", tags=["quizzes"])
+router = APIRouter(prefix="/game", tags=["game"])
 
 @router.post("/{quiz_id}/create_room")
 async def create_room(quiz_id: str, user=Depends(get_current_user), redis=Depends(get_redis_client)):

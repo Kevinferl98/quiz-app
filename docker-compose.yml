@@ -80,7 +80,7 @@ services:
       MONGO_URI: "mongodb://mongo:27017"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.quiz.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.quiz.rule=PathPrefix(`/api/quizzes`)"
       - "traefik.http.services.quiz.loadbalancer.server.port=8001"
       - "traefik.http.middlewares.quiz-strip.stripprefix.prefixes=/api"
       - "traefik.http.routers.quiz.middlewares=quiz-strip"
@@ -104,22 +104,16 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_started
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.game.rule=PathPrefix(`/api/game`) || PathPrefix(`/ws`)"
+      - "traefik.http.middlewares.game-strip.stripprefix.prefixes=/api"
+      - "traefik.http.routers.game.middlewares=game-strip"
+      - "traefik.http.services.game.loadbalancer.server.port=8002"
     networks:
       - backend_net
     deploy:
       replicas: 3
-
-  nginx-lb:
-    image: nginx:alpine3.23
-    container_name: nginx_lb
-    ports:
-      - "8082:8082"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - game-service
-    networks:
-      - backend_net
 
   # --- FRONTEND ---
   frontend:
