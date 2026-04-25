@@ -78,6 +78,12 @@ services:
       KEYCLOAK_REALM: quiz
       KEYCLOAK_CLIENT_ID: account
       MONGO_URI: "mongodb://mongo:27017"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.quiz.rule=PathPrefix(`/api`)"
+      - "traefik.http.services.quiz.loadbalancer.server.port=8001"
+      - "traefik.http.middlewares.quiz-strip.stripprefix.prefixes=/api"
+      - "traefik.http.routers.quiz.middlewares=quiz-strip"
     depends_on:
       mongo: 
         condition: service_started
@@ -119,11 +125,27 @@ services:
   frontend:
     build: ./frontend
     container_name: frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=8080"
+    networks:
+      - backend_net
+
+  # --- API GATEWAY ---
+  traefik:
+    image: traefik:v3.6
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
     ports:
-      - "8080:8080"
-    depends_on:
-      - quiz-service
-      - game-service
+      - "80:80"
+      - "8085:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
       - backend_net
     
