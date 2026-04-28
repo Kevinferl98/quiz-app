@@ -24,13 +24,13 @@ A real-time multiplayer quiz platform where users can create, join, and compete 
 
 The system is designed as a distributed set of services:
 
+**API Gateway**: It serves as the single entry point, handling dynamic routing, load balancing across service replicas, and managing WebSocket protocol upgrades for the entire ecosystem.
+
 **Quiz Service**: A Python (FastAPI) service that manages the lifecycle of quizzes (CRUD), persisting data in MongoDB.
 
 **Game Service**: The core engine for multiplayer logic. It handles WebSocket connections for real-time interaction and uses Redis Pub/Sub to synchronize state across multiple instances.
 
 **Identity Provider**: Keycloak (backed by PostgreSQL) manages user identity, ensuring secure access to the creator dashboard.
-
-**Load Balancer (NGINX)**: Orchestrates incoming traffic, distributing WebSocket and HTTP requests to the appropriate service instances.
 
 ## Tech Stack
 
@@ -49,11 +49,13 @@ The system is designed as a distributed set of services:
 **PostgreSQL**: Relational storage for Keycloak identity data.
 
 ## Technical Decisions
+**API Gateway & Load Balancing**: The system utilizes Traefik as a single entry point, managing dynamic Service Discovery via Docker labels. It acts as both a reverse proxy and a Load Balancer, distributing traffic across service replicas and natively handling WebSocket protocol upgrades.
+
 **gRPC vs REST**: Using gRPC for internal service communication (Game Service → Quiz Service) allows to reduce overhead and benefit from strict Protobuf contract definition.
 
 **Redis for State Management**: Since game rooms are highly volatile, Redis provides the sub-millisecond latency required to track game status.
 
-**WebSocket Scaling**: NGINX acts as a reverse proxy to handle WebSocket upgrades and maintain persistent connections between the Client and the Game Service.
+**Horizontal Scalability**: The architecture is designed to scale horizontally. By combining Traefik’s load balancing with Redis Pub/Sub, the platform can handle increased loads by simply spinning up more service replicas without losing state consistency.
 
 **CI**: Automated pipeline via GitHub Actions that runs Linter and Unit Tests on every push, ensuring code quality and coverage for the backend.
 
@@ -77,7 +79,7 @@ The system is designed as a distributed set of services:
    ```bash
    docker compose up -d
    ```
-Once running, the web interface will be available at: **http://localhost:8080**
+Once running, the web interface will be available at: **http://localhost**
 
 ## Using the Application
 
