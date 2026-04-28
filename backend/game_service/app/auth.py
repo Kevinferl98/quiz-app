@@ -27,7 +27,7 @@ def get_current_user(authorization: str = Header(...)):
             signing_key.key,
             algorithms=["RS256"],
             audience=CLIENT_ID,
-            issuer=f"http://localhost:8081/realms/{REALM}",
+            issuer=f"http://localhost/identity/realms/{REALM}",
             options={
                 "verify_exp": True,
                 "verify_iss": True

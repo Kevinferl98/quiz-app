@@ -54,11 +54,16 @@ services:
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-    ports:
-      - "8081:8080"
+      KC_HTTP_RELATIVE_PATH: /identity
+      KC_HOSTNAME_STRICT: "false"
+      KC_PROXY_HEADERS: xforwarded
     volumes:
       - ./keycloak/quiz-realm.json:/opt/keycloak/data/import/quiz-realm.json:ro
       - ./keycloak/themes/modern-quiz:/opt/keycloak/themes/modern-quiz:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=PathPrefix(`/identity`)"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
     depends_on:
       postgres: 
         condition: service_healthy
@@ -74,7 +79,7 @@ services:
       - "50051:50051"
     environment:
       IS_LOCAL: "true"
-      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_URL: http://keycloak:8080/identity
       KEYCLOAK_REALM: quiz
       KEYCLOAK_CLIENT_ID: account
       MONGO_URI: "mongodb://mongo:27017"
@@ -96,7 +101,7 @@ services:
     build: ./backend/game_service
     environment:
       IS_LOCAL: "true"
-      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_URL: http://keycloak:8080/identity
       KEYCLOAK_REALM: quiz
       KEYCLOAK_CLIENT_ID: account
     depends_on:
