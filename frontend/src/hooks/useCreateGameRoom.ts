@@ -34,7 +34,7 @@ export function useCreateGameRoom() {
 
             try {
                 const data: QuizzesResponse = await apiFetch(
-                    "http://quiz-service:8001/quizzes/public"
+                    "/quizzes/public"
                 );
                 setQuizzes(data.quizzes || []);
             } catch(err: any) {
@@ -59,7 +59,7 @@ export function useCreateGameRoom() {
                 setCreatingRoomId(quizId);
 
                 const room = await apiFetch(
-                    `http://nginx-lb:8082/quizzes/${quizId}/create_room`,
+                    `/game/${quizId}/create_room`,
                     { method: "POST" },
                     true
                 );

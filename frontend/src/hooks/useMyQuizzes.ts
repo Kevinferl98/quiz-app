@@ -32,7 +32,7 @@ export function useMyQuizzes() {
 
             try {
                 const data: QuizzesResponse = await apiFetch(
-                    "http://quiz-service:8080/quizzes/mine",
+                    "/quizzes/mine",
                     {},
                     true
                 );
@@ -63,7 +63,7 @@ export function useMyQuizzes() {
 
             try {
                 await apiFetch(
-                    `http://quiz-service:8080/quizzes/${quizId}`,
+                    `/quizzes/${quizId}`,
                     { method: "DELETE" },
                     true
                 );

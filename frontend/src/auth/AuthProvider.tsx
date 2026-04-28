@@ -19,7 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             onLoad: "check-sso",
             pkceMethod: "S256",
             checkLoginIframe: false,
-            redirectUri: "http://localhost:8080/"
+            redirectUri: "http://localhost/"
         })
         .then((auth) => {
             setAuthenticated(auth);

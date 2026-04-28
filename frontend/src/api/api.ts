@@ -1,10 +1,13 @@
 import keycloak from "../auth/keycloak";
+import { CONFIG } from "../config";
 
 export async function apiFetch<T = any>(
-    url: string, 
+    endpoint: string, 
     options: RequestInit = {},
     requireAuth: boolean = false
 ): Promise<T> {
+    const fullUrl = `${CONFIG.API_BASE}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+
     const headers: Record<string, string> = {
         "Content-Type": "application/json",
         ...(options.headers as Record<string, string> || {}),
@@ -19,7 +22,7 @@ export async function apiFetch<T = any>(
         headers["Authorization"] = `Bearer ${keycloak.token}`;
     }
 
-    const response = await fetch(url, {
+    const response = await fetch(fullUrl, {
         ...options,
         headers
     });

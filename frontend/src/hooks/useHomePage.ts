@@ -34,7 +34,7 @@ export function useHomePage() {
 
             try {
                 const data: QuizzesReponse = await apiFetch(
-                    `http://quiz-service:8001/quizzes/public?page=${page}&limit=${limit}`
+                    `/quizzes/public?page=${page}&limit=${limit}`
                 );
 
                 setQuizzes(data.quizzes || []);

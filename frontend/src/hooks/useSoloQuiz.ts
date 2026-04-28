@@ -37,7 +37,7 @@ export function useSoloQuiz() {
 
             try {
                 const data: Quiz = await apiFetch(
-                    `http://quiz-service:8080/quizzes/${id}`
+                    `/quizzes/${id}`
                 );
                 setQuiz(data);
             } catch (err: any) {
@@ -62,7 +62,7 @@ export function useSoloQuiz() {
 
             try {
                 const result: { correct: boolean } = await apiFetch(
-                    `http://quiz-service:8080/quizzes/${quiz.quizId}/answer`,
+                    `/quizzes/${quiz.quizId}/answer`,
                     {
                         method: "POST",
                         body: JSON.stringify({

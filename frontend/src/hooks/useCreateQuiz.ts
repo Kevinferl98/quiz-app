@@ -69,7 +69,7 @@ export function useCreateQuiz() {
 
             try {
                 const data: QuizResponse = await apiFetch(
-                    "http://quiz-service:8001/quizzes",
+                    "/quizzes/",
                     {
                         method: "POST",
                         body: JSON.stringify({

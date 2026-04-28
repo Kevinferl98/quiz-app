@@ -6,6 +6,7 @@ from jwt import PyJWKClient
 KEYCLOAK_URL = os.getenv("KEYCLOAK_URL")
 REALM = os.getenv("KEYCLOAK_REALM")
 CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
+KEYCLOAK_ISSUER = os.getenv("KEYCLOAK_ISSUER")
 
 JWKS_URL = f"{KEYCLOAK_URL}/realms/{REALM}/protocol/openid-connect/certs"
 
@@ -27,7 +28,7 @@ def get_current_user(authorization: str = Header(...)):
             signing_key.key,
             algorithms=["RS256"],
             audience=CLIENT_ID,
-            issuer=f"http://localhost:8081/realms/{REALM}",
+            issuer=f"{KEYCLOAK_ISSUER}/{REALM}",
             options={
                 "verify_exp": True,
                 "verify_iss": True

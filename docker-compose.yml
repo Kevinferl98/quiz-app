@@ -54,11 +54,16 @@ services:
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-    ports:
-      - "8081:8080"
+      KC_HTTP_RELATIVE_PATH: /identity
+      KC_HOSTNAME_STRICT: "false"
+      KC_PROXY_HEADERS: xforwarded
     volumes:
       - ./keycloak/quiz-realm.json:/opt/keycloak/data/import/quiz-realm.json:ro
       - ./keycloak/themes/modern-quiz:/opt/keycloak/themes/modern-quiz:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=PathPrefix(`/identity`)"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
     depends_on:
       postgres: 
         condition: service_healthy
@@ -74,10 +79,17 @@ services:
       - "50051:50051"
     environment:
       IS_LOCAL: "true"
-      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_URL: http://keycloak:8080/identity
       KEYCLOAK_REALM: quiz
       KEYCLOAK_CLIENT_ID: account
+      KEYCLOAK_ISSUER: http://localhost/identity/realms
       MONGO_URI: "mongodb://mongo:27017"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.quiz.rule=PathPrefix(`/api/quizzes`)"
+      - "traefik.http.services.quiz.loadbalancer.server.port=8001"
+      - "traefik.http.middlewares.quiz-strip.stripprefix.prefixes=/api"
+      - "traefik.http.routers.quiz.middlewares=quiz-strip"
     depends_on:
       mongo: 
         condition: service_started
@@ -90,40 +102,51 @@ services:
     build: ./backend/game_service
     environment:
       IS_LOCAL: "true"
-      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_URL: http://keycloak:8080/identity
       KEYCLOAK_REALM: quiz
       KEYCLOAK_CLIENT_ID: account
+      KEYCLOAK_ISSUER: http://localhost/identity/realms
     depends_on:
       redis: 
         condition: service_healthy
       keycloak:
         condition: service_started
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.game.rule=PathPrefix(`/api/game`) || PathPrefix(`/ws`)"
+      - "traefik.http.middlewares.game-strip.stripprefix.prefixes=/api"
+      - "traefik.http.routers.game.middlewares=game-strip"
+      - "traefik.http.services.game.loadbalancer.server.port=8002"
     networks:
       - backend_net
     deploy:
       replicas: 3
 
-  nginx-lb:
-    image: nginx:alpine3.23
-    container_name: nginx_lb
-    ports:
-      - "8082:8082"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - game-service
-    networks:
-      - backend_net
-
   # --- FRONTEND ---
   frontend:
     build: ./frontend
     container_name: frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=8080"
+    networks:
+      - backend_net
+
+  # --- API GATEWAY ---
+  traefik:
+    image: traefik:v3.6
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
     ports:
-      - "8080:8080"
-    depends_on:
-      - quiz-service
-      - game-service
+      - "80:80"
+      - "8085:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
       - backend_net
     

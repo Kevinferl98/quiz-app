@@ -1,9 +1,10 @@
 import Keycloak from "keycloak-js";
+import { CONFIG } from "../config";
 
 const keycloak = new Keycloak({
-    url: "http://localhost:8081",
-    realm: "quiz",
-    clientId: "quiz-frontend"
+    url: CONFIG.KEYCLOAK_URL,
+    realm: CONFIG.KEYCLOAK_REALM,
+    clientId: CONFIG.KEYCLOAK_CLIENT_ID
 });
 
 export default keycloak;
