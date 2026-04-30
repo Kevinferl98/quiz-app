@@ -48,6 +48,8 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      APP_ENV: testing
 
     strategy:
       fail-fast: false
