@@ -19,6 +19,7 @@ from app.logging_config import setup_logging
 from app.middleware.logging_middleware import setup_http_logging
 from app.services.quiz_grpc_server import serve as serve_grpc
 from app.db.mongo_client import mongo_db
+from app.telemetry import setup_telemetry, shutdown_telemetry
 
 setup_logging()
 
@@ -33,9 +34,11 @@ async def lifespan(app: FastAPI):
     grpc_task.cancel()
     print("gRPC server stopped")
     mongo_db.close()
+    shutdown_telemetry()
 
 app = FastAPI(lifespan=lifespan)
 
+setup_telemetry(app)
 setup_http_logging(app)
 app.include_router(router)
 

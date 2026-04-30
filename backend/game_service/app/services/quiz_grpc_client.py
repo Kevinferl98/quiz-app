@@ -1,14 +1,22 @@
 import grpc
 from app.services.grpc_generated import quiz_service_pb2, quiz_service_pb2_grpc
+from opentelemetry.propagate import inject
 
 QUIZ_SERVICE_HOST = "quiz_service:50051"
+
+
+def _build_trace_metadata():
+    carrier = {}
+    inject(carrier)
+    return list(carrier.items())
 
 async def get_quiz_by_id(quiz_id: str) -> dict:
     async with grpc.aio.insecure_channel(QUIZ_SERVICE_HOST) as channel:
         stub = quiz_service_pb2_grpc.QuizServiceStub(channel)
 
         response = await stub.GetQuizById(
-            quiz_service_pb2.GetQuizRequest(quizId=quiz_id)
+            quiz_service_pb2.GetQuizRequest(quizId=quiz_id),
+            metadata=_build_trace_metadata(),
         )
 
         return {
