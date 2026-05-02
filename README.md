@@ -48,6 +48,8 @@ The system is designed as a distributed set of services:
 
 **PostgreSQL**: Relational storage for Keycloak identity data.
 
+**Observability**: OpenTelemetry tracing with Tempo, centralized logs with Loki (ingested by Alloy), and visualization in Grafana.
+
 ## Technical Decisions
 **API Gateway & Load Balancing**: The system utilizes Traefik as a single entry point, managing dynamic Service Discovery via Docker labels. It acts as both a reverse proxy and a Load Balancer, distributing traffic across service replicas and natively handling WebSocket protocol upgrades.
 
@@ -58,6 +60,8 @@ The system is designed as a distributed set of services:
 **Horizontal Scalability**: The architecture is designed to scale horizontally. By combining Traefik’s load balancing with Redis Pub/Sub, the platform can handle increased loads by simply spinning up more service replicas without losing state consistency.
 
 **CI**: Automated pipeline via GitHub Actions that runs Linter and Unit Tests on every push, ensuring code quality and coverage for the backend.
+
+**Observability**: Traces and logs are centralized in Grafana. Backend services emit OpenTelemetry traces and structured JSON logs with `trace_id` / `span_id` correlation.
 
 ## Running the Application
 
@@ -80,6 +84,9 @@ The system is designed as a distributed set of services:
    docker compose up -d
    ```
 Once running, the web interface will be available at: **http://localhost**
+
+### Observability Endpoints
+- **Grafana**: http://localhost:3000
 
 ## Using the Application
 
