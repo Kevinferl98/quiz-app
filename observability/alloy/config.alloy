@@ -64,7 +64,7 @@ loki.process "app" {
     expressions = {
       log    = "log",
       stream = "stream",
-      time   = "time"
+      time   = "time",
     }
   }
 
