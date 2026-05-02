@@ -41,6 +41,56 @@ services:
     networks:
       - backend_net
 
+  tempo:
+    image: grafana/tempo:2.7.2
+    container_name: tempo
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./observability/tempo/tempo.yaml:/etc/tempo.yaml:ro
+    ports:
+      - "4317:4317"
+      - "3200:3200"
+    networks:
+      - backend_net
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./observability/grafana/provisioning/datasources/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+    depends_on:
+      - tempo
+      - loki
+    networks:
+      - backend_net
+
+  loki:
+    image: grafana/loki:3.2.1
+    container_name: loki
+    command: ["-config.file=/etc/loki/loki.yaml"]
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./observability/loki/loki.yaml:/etc/loki/loki.yaml:ro
+    networks:
+      - backend_net
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    command: ["run", "/etc/alloy/config.alloy"]
+    volumes:
+      - ./observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - backend_net
+
   # --- IDENTITY PROVIDER ---
   keycloak:
     image: keycloak/keycloak:26.5
@@ -84,6 +134,13 @@ services:
       KEYCLOAK_CLIENT_ID: account
       KEYCLOAK_ISSUER: http://localhost/identity/realms
       MONGO_URI: "mongodb://mongo:27017"
+      OTEL_ENABLED: "true"
+      OTEL_SERVICE_NAME: "quiz_service"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo:4317"
+      OTEL_TRACES_SAMPLER: "parentbased_traceidratio"
+      OTEL_TRACES_SAMPLER_ARG: "1.0"
+      HTTP_LOG_BODIES: "false"
+      HTTP_LOG_MAX_BODY_BYTES: "4096"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.quiz.rule=PathPrefix(`/api/quizzes`)"
@@ -94,6 +151,8 @@ services:
       mongo: 
         condition: service_started
       keycloak:
+        condition: service_started
+      tempo:
         condition: service_started
     networks:
       - backend_net
@@ -106,10 +165,19 @@ services:
       KEYCLOAK_REALM: quiz
       KEYCLOAK_CLIENT_ID: account
       KEYCLOAK_ISSUER: http://localhost/identity/realms
+      OTEL_ENABLED: "true"
+      OTEL_SERVICE_NAME: "game_service"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo:4317"
+      OTEL_TRACES_SAMPLER: "parentbased_traceidratio"
+      OTEL_TRACES_SAMPLER_ARG: "1.0"
+      HTTP_LOG_BODIES: "false"
+      HTTP_LOG_MAX_BODY_BYTES: "4096"
     depends_on:
       redis: 
         condition: service_healthy
       keycloak:
+        condition: service_started
+      tempo:
         condition: service_started
     labels:
       - "traefik.enable=true"

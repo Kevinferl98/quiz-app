@@ -1,0 +1,88 @@
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    replacement   = "$1"
+    target_label  = "container"
+    action        = "replace"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "compose_service"
+    action        = "replace"
+  }
+
+  rule {
+    source_labels = ["compose_service", "container"]
+    separator     = ";"
+    regex         = ";(.*)"
+    replacement   = "$1"
+    target_label  = "compose_service"
+    action        = "replace"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "compose_project"
+    action        = "replace"
+  }
+
+  rule {
+    source_labels = ["compose_service"]
+    target_label  = "service_name"
+    action        = "replace"
+  }
+
+  rule {
+    source_labels = ["compose_service"]
+    regex         = "(loki|grafana|tempo|alloy|mongo|redis|postgres)"
+    action        = "drop"
+  }
+
+  rule {
+    target_label = "job"
+    replacement  = "app"
+    action       = "replace"
+  }
+}
+
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.containers.output
+  forward_to = [loki.process.app.receiver]
+}
+
+loki.process "app" {
+  stage.json {
+    expressions = {
+      log    = "log",
+      stream = "stream",
+      time   = "time",
+    }
+  }
+
+  stage.labels {
+    values = {
+      stream = "",
+    }
+  }
+
+  stage.output {
+    source = "log"
+  }
+
+  forward_to = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
