@@ -86,7 +86,7 @@ The system is designed as a distributed set of services:
 Once running, the web interface will be available at: **http://localhost**
 
 ### Observability Endpoints
-- **Grafana**: http://localhost:3000
+- **Grafana**: **http://localhost:3000**
 
 ## Using the Application
 
